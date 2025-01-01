@@ -1,13 +1,19 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "q1.h"
 
 // Function definition
-void print_hello_world(void) {
-    printf("Hello, World!\n");
+void fork_function(void) {
+  int x = 10;
+  printf("Value of x is: %d in process: %d\n", x, getpid());
+  fork();
+  printf("Value of x is: %d in process: %d\n", x, getpid());
+  x = 20;
+  printf("Value of x is: %d in process: %d\n", x, getpid());
 }
 
 int main() {
-    // Call the function to print "Hello, World!"
-    print_hello_world();
+    // Call the function to fork your process
+    fork_function();
     return 0;
 }
