@@ -32,7 +32,15 @@ void fork_function(void) {
 
 /**
  * Crucial takeway from q2: the forked process indeed has access to the 
- * file and is able to write to it along with the parent process.
+ * file and is able to write to it along with the parent process. However, the 
+ * file is not thread safe.
+ * 
+ * ChatGPT Answer: Yes, both the parent and child process can access the file descriptor
+ * returned by the open() system call. This is because file descriptors are inherited by
+ * child processes when a fork() is called. However, writing to the file concurrently from
+ * both processes can lead to race conditions or interleaved writes, which can result in
+ * garbled or unpredictable file content. This is due to the fact that file I/O is no
+ *  automatically synchronized between processes.
  */
 int main() {
     // Call the function to fork your process
