@@ -45,6 +45,9 @@ void fork_function(void) {
 }
 
 /**
+ * Crucial takeaway for question 3: one way to synchronize
+ * between the parent and child is to use a pipe which enables
+ * you to have the parent process wait until the child is finished.
  */
 int main() {
     // Call the function to fork your process
