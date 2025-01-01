@@ -3,7 +3,8 @@
 #include "q3.h"
 
 /**
- * Fork function with an integer local variable.
+ * Fork function with a pipe between the parent and child 
+ * processes.
  */
 void fork_function(void) {
   // Create a pipe.
