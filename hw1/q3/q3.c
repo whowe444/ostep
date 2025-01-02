@@ -7,68 +7,48 @@
  * processes.
  */
 void fork_function(void) {
+  // Create a pipe.
   int tPipeFDs[2];
-  pid_t tPid1, tPid2;
-  char tMsg[] = "Hello from the first child!";
-  char tReadMsg[100];
-
-  // Create the pipe.
   pipe(tPipeFDs);
 
-  tPid1 = fork();
-  if (tPid1 == 0)
+  // Grab parent pid.
+  pid_t tParent = getpid();
+
+  // Fork the current process.
+  fork();
+
+  if (getpid() == tParent)
   {
-    // Close the read end of the pipe.
+    // Close the pipe writer.
+    close(tPipeFDs[1]);
+    
+    // Wait for the child to write to the pipe.
+    char tBuffer[4];
+    read(tPipeFDs[0], tBuffer, 4);
+
+    printf("goodbye\n");
+
+    // Close the pipe reader.
+    close(tPipeFDs[0]);
+  }
+  else
+  {
+    printf("hello\n");
+
+    // Close the pipe reader.
     close(tPipeFDs[0]);
 
-    // Redirect stdout to the pipe write end.
-    if (dup2(tPipeFDs[1], STDOUT_FILENO) == -1) {
-      perror("dup2 failed");
-      exit(-1);
-    }
+    write(tPipeFDs[1], "done", 4);
 
-    // Close original pipe end since it is duplicated.
+    // Close the writer after writing
     close(tPipeFDs[1]);
-
-    printf("%s\n", tMsg);
-    exit(0);
-
   }
-
-  tPid2 = fork();
-  if (tPid2 == 0)
-  {
-    // Close the read end of the pipe
-    close(tPipeFDs[1]);
-
-    // Redirect standard-in to the pipe reader.
-    if (dup2(tPipeFDs[0], STDIN_FILENO) == -1) {
-      perror("dup2 failed");
-      exit(-1);
-    }
-
-    // Close the original pipe read end since it's now duplicated.
-    close(tPipeFDs[0]);
-
-    // Read from stdin (which is now the pipe) and print.
-    if (fgets(tReadMsg, sizeof(tReadMsg), stdin) != NULL) {
-      printf("Child 2 received: %s", tReadMsg);
-    }
-
-    exit(0);
-  }
-
-  // Close the pipe.
-  close(tPipeFDs[0]);
-  close(tPipeFDs[1]);
-
-  // Wait for the child processes to finish.
-  waitpid(tPid1, NULL, 0);
-  waitpid(tPid2, NULL, 0);
-  printf("Parent process exits.\n");
 }
 
 /**
+ * Crucial takeaway for question 3: one way to synchronize
+ * between the parent and child is to use a pipe which enables
+ * you to have the parent process wait until the child is finished.
  */
 int main() {
     // Call the function to fork your process

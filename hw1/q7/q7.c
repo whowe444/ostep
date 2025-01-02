@@ -25,6 +25,9 @@ void fork_function(void) {
 }
 
 /**
+ * After closing the STDOUT_FILENO the child process is not longer 
+ * able to print to stdout, but the parent process is still able
+ * to do so.
  */
 int main() {
     // Call the function to fork your process
