@@ -6,7 +6,7 @@ CFLAGS = -Wall
 TARGET = q2.bin
 
 # Source files
-SRCS = q2.c
+SRCS = src/q2.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
@@ -19,7 +19,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $(TARGET)
 
 # Compile the source files into object files
-%.o: %.c q2.h
+%.o: %.c src/q2.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up object files and executable
