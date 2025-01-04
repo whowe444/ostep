@@ -3,10 +3,10 @@ CC = gcc
 CFLAGS = -Wall
 
 # Output executable name
-TARGET = q8.bin
+TARGET = src/q8.bin
 
 # Source files
-SRCS = q8.c
+SRCS = src/q8.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
@@ -19,7 +19,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $(TARGET)
 
 # Compile the source files into object files
-%.o: %.c q8.h
+%.o: %.c src/q8.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up object files and executable
