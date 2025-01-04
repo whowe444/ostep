@@ -11,8 +11,6 @@
 void fork_function(void) {
   int tPipeFDs[2];
   pid_t tPid1, tPid2;
-  char tMsg[] = "Hello from the first child!";
-  char tReadMsg[100];
 
   // Create the pipe.
   pipe(tPipeFDs);
@@ -31,7 +29,8 @@ void fork_function(void) {
 
     // Close original pipe end since it is duplicated.
     close(tPipeFDs[1]);
-
+  
+    char tMsg[] = "Hello from the first child!";
     printf("%s\n", tMsg);
     exit(0);
 
@@ -53,6 +52,7 @@ void fork_function(void) {
     close(tPipeFDs[0]);
 
     // Read from stdin (which is now the pipe) and print.
+    char tReadMsg[100];
     if (fgets(tReadMsg, sizeof(tReadMsg), stdin) != NULL) {
       printf("Child 2 received: %s", tReadMsg);
     }

@@ -1,9 +1,12 @@
 extern crate nix;
 
-use nix::unistd::{fork, pipe, execv, close, dup2, ForkResult};
+use nix::unistd::{fork, pipe, close, dup2, ForkResult};
 use nix::sys::wait::{waitpid, WaitStatus};
-use std::ffi::CString;
 use std::process;
+
+use std::io;
+
+use std::process::exit;
 
 fn main() {
     // Create a pipe to connect stdout of the first child to stdin of the second
@@ -11,9 +14,6 @@ fn main() {
 
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child, .. }) => {
-            // In the parent process, close the reader end of the pipe (we don't need it)
-            close(reader).expect("Failed to close pipe reader");
-
             // Wait for the first child to finish
             let status = waitpid(child, None).expect("Failed to wait for child");
             match status {
@@ -39,19 +39,22 @@ fn main() {
                     }
                 }
                 Ok(ForkResult::Child) => {
-                    // Second child: redirect stdin to the reader end of the pipe
                     close(writer).expect("Failed to close pipe writer");
-                    let stdin_fd = reader;
-                    dup2(stdin_fd, 0).expect("Failed to redirect stdin to pipe");
+                    // Second child: redirect stdin to the reader end of the pipe
+                    dup2(reader, libc::STDIN_FILENO).expect("Failed to redirect stdin to pipe");
 
-                    // Execute a command that reads from stdin (e.g., `cat` to print the input)
-                    let cmd = CString::new("/bin/cat").expect("CString::new failed");
-                    let args = [CString::new("cat").expect("CString::new failed")];
-                    let args: Vec<*const i8> = args.iter().map(|arg| arg.as_ptr()).collect();
-                    let mut args_with_null = args.clone();
-                    args_with_null.push(std::ptr::null()); // Null-terminate the array
+                    // Close the original reader since it is duplicated
+                    close(reader).expect("Failed to close the pipe reader");
 
-                    execv(&cmd, &args_with_null).expect("Failed to execute second child");
+                    let mut input = String::new();
+                
+                    // Read input from stdin
+                    io::stdin()
+                        .read_line(&mut input)
+                        .expect("Failed to read line");
+                
+                    // Trim the newline character and print the input
+                    println!("{}", input);                
                 }
                 Err(err) => {
                     eprintln!("Failed to fork second child: {}", err);
@@ -60,22 +63,16 @@ fn main() {
             }
         }
         Ok(ForkResult::Child) => {
-            // First child: redirect stdout to the writer end of the pipe
             close(reader).expect("Failed to close pipe reader");
-            let stdout_fd = writer;
-            dup2(stdout_fd, 1).expect("Failed to redirect stdout to pipe");
+            // First child: redirect stdout to the writer end of the pipe
+            dup2(writer, libc::STDOUT_FILENO).expect("Failed to redirect stdout to pipe");
 
-            // Execute a command that writes to stdout (e.g., `echo`)
-            let cmd = CString::new("/bin/echo").expect("CString::new failed");
-            let args = [
-                CString::new("Hello from first child!").expect("CString::new failed"),
-            ];
-            let args: Vec<*const i8> = args.iter().map(|arg| arg.as_ptr()).collect();
-            let mut args_with_null = args.clone();
-            args_with_null.push(std::ptr::null()); // Null-terminate the array
+            // Close the original writer since it is duplicated
+            close(writer).expect("Failed to close pipe writer");
 
-            execv(&cmd, &args_with_null).expect("Failed to execute first child");
-        }
+            let msg = "Hello from the first child";
+            println!("{}\n", msg);
+            exit(0);        }
         Err(err) => {
             eprintln!("Failed to fork: {}", err);
             process::exit(1);
