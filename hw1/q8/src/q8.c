@@ -39,7 +39,7 @@ void fork_function(void) {
   tPid2 = fork();
   if (tPid2 == 0)
   {
-    // Close the read end of the pipe
+    // Close the writer end of the pipe
     close(tPipeFDs[1]);
 
     // Redirect standard-in to the pipe reader.
