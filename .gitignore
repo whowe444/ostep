@@ -2,3 +2,6 @@ target
 Cargo.lock
 *.o
 *.bin
+*.so
+vgcore*
+test_runner

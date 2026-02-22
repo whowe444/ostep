@@ -3,10 +3,10 @@ CC = gcc
 CFLAGS = -Wall -g
 
 # Output executable name
-TARGET = null.bin
+TARGET = integer_array.bin
 
 # Source files
-SRCS = src/null.c
+SRCS = src/integer_array.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
@@ -19,7 +19,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $(TARGET)
 
 # Compile the source files into object files
-%.o: %.c src/null.h
+%.o: %.c src/integer_array.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up object files and executable
