@@ -4,14 +4,22 @@
 
 #include "realloc_list.h"
 
+static void ReallocList_shiftdown(ReallocList *list, size_t index) {
+    for (size_t i = index; i < list->size - 1; i++) {
+        list->data[index] = list->data[index+1];
+    }
+}
+
 size_t ReallocList_size(ReallocList *list) {
     return list->size;
 }
 
-int* ReallocList_remove(ReallocList *list, size_t index) {
-    if (list->size <= index) return NULL;
+int ReallocList_remove(ReallocList *list, size_t index, int* return_value) {
+    if (list->size <= index) return -1;
+    *return_value = list->data[index];
+    ReallocList_shiftdown(list, index);
     list->size--;
-    return &list->data[index];
+    return 0;
 }
 
 int ReallocList_add(ReallocList *list, int value) {
@@ -33,5 +41,3 @@ int* ReallocList_get(ReallocList *list, size_t index) {
     if (list->size <= index) return NULL;
     return &list->data[index];
 }
-
-

@@ -7,7 +7,7 @@ typedef struct {
 } ReallocList;
 
 size_t ReallocList_size(ReallocList *list);
-int* ReallocList_remove(ReallocList *list, size_t index);
+int ReallocList_remove(ReallocList *list, size_t index, int* return_value);
 int ReallocList_add(ReallocList *list, int value);
 int* ReallocList_get(ReallocList *list, size_t index);
 

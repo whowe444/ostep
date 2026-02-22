@@ -7,7 +7,8 @@ TEST(ReallocListTest, EmptyList) {
 
 TEST(ReallocListTest, RemoveNonExistent) {
     ReallocList list = {0, NULL};
-    EXPECT_EQ(ReallocList_remove(&list, 0), nullptr);
+    int return_val;
+    EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), -1);
 }
 
 TEST(ReallocListTest, AddElement) {
@@ -46,7 +47,9 @@ TEST(ReallocListTest, RemoveElement) {
     ReallocList_add(&list, test_value);
 
     // Remove the element.
-    EXPECT_EQ(*ReallocList_remove(&list, 0), test_value);
+    int return_val;
+    EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), 0);
+    EXPECT_EQ(return_val, test_value);
 
     // Size is zero.
     EXPECT_EQ(ReallocList_size(&list), 0);
@@ -69,6 +72,68 @@ TEST(ReallocListTest, AddTwoElements) {
 
     // Verify the elements
     EXPECT_EQ(*ReallocList_get(&list, 0), 5);
+}
+
+TEST(ReallocListTest, AddTwoRemoveOne) {
+    ReallocList list = {0, NULL};
+
+    // Add an element to the realloc list.
+    ReallocList_add(&list, 5);
+
+    // Add a second element to the realloc list.
+    ReallocList_add(&list, 10);
+
+    // Remove index 0
+    int return_val;
+    EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), 0);
+    EXPECT_EQ(5, return_val);
+
+    // Size has reduced by 1.
+    EXPECT_EQ(ReallocList_size(&list), 1);
+}
+
+TEST(ReallocListTest, AddTwoRemoveTwoIndexZero) {
+    ReallocList list = {0, NULL};
+
+    // Add an element to the realloc list.
+    ReallocList_add(&list, 5);
+
+    // Add a second element to the realloc list.
+    ReallocList_add(&list, 10);
+
+    // Remove index 0
+    int return_val;
+    EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), 0);
+    EXPECT_EQ(5, return_val);
+
+    // Remove index 0 again
+    EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), 0);
+    EXPECT_EQ(10, return_val);
+
+    // Size has reduced by 2.
+    EXPECT_EQ(ReallocList_size(&list), 0);
+}
+
+TEST(ReallocListTest, AddTwoRemoveTwoIndexOne) {
+    ReallocList list = {0, NULL};
+
+    // Add an element to the realloc list.
+    ReallocList_add(&list, 5);
+
+    // Add a second element to the realloc list.
+    ReallocList_add(&list, 10);
+
+    // Remove index 0
+    int return_val;
+    EXPECT_EQ(ReallocList_remove(&list, 1, &return_val), 0);
+    EXPECT_EQ(10, return_val);
+
+    // Remove index 0 again
+    EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), 0);
+    EXPECT_EQ(5, return_val);
+
+    // Size has reduced by 2.
+    EXPECT_EQ(ReallocList_size(&list), 0);
 }
 
 int main(int argc, char **argv) {
