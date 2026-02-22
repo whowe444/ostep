@@ -1,18 +1,18 @@
 #include "realloc_list_test.hh"
 
 TEST(ReallocListTest, EmptyList) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
     EXPECT_EQ(ReallocList_size(&list), 0);
 }
 
 TEST(ReallocListTest, RemoveNonExistent) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
     int return_val;
     EXPECT_EQ(ReallocList_remove(&list, 0, &return_val), -1);
 }
 
 TEST(ReallocListTest, AddElement) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     // Add an element to the realloc list.
     EXPECT_EQ(ReallocList_add(&list, 5), 0);
@@ -22,12 +22,12 @@ TEST(ReallocListTest, AddElement) {
 }
 
 TEST(ReallocListTest, GetNonExistent) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
     EXPECT_EQ(ReallocList_get(&list, 0), nullptr);
 }
 
 TEST(ReallocListTest, GetElement) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     int test_value = 5;
 
@@ -39,7 +39,7 @@ TEST(ReallocListTest, GetElement) {
 }
 
 TEST(ReallocListTest, RemoveElement) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     int test_value = 5;
 
@@ -56,7 +56,7 @@ TEST(ReallocListTest, RemoveElement) {
 }
 
 TEST(ReallocListTest, AddTwoElements) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     // Add an element to the realloc list.
     EXPECT_EQ(ReallocList_add(&list, 5), 0);
@@ -75,7 +75,7 @@ TEST(ReallocListTest, AddTwoElements) {
 }
 
 TEST(ReallocListTest, AddTwoRemoveOne) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     // Add an element to the realloc list.
     ReallocList_add(&list, 5);
@@ -93,7 +93,7 @@ TEST(ReallocListTest, AddTwoRemoveOne) {
 }
 
 TEST(ReallocListTest, AddTwoRemoveTwoIndexZero) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     // Add an element to the realloc list.
     ReallocList_add(&list, 5);
@@ -115,7 +115,7 @@ TEST(ReallocListTest, AddTwoRemoveTwoIndexZero) {
 }
 
 TEST(ReallocListTest, AddTwoRemoveTwoIndexOne) {
-    ReallocList list = {0, NULL};
+    ReallocList list = {0, 0, NULL};
 
     // Add an element to the realloc list.
     ReallocList_add(&list, 5);

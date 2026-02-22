@@ -24,15 +24,18 @@ int ReallocList_remove(ReallocList *list, size_t index, int* return_value) {
 
 int ReallocList_add(ReallocList *list, int value) {
     // If the list is empty, allocate memory.
-    int* tmp = (int*) realloc(list->data, sizeof(int));
-    if (tmp == NULL) {
-        fprintf(stderr, "realloc failed\n");
-        free(list->data);
-        return -1;
+    if (list->size == list->capacity) {
+        int* tmp = (int*) realloc(list->data, sizeof(int));
+        if (tmp == NULL) {
+            fprintf(stderr, "realloc failed\n");
+            free(list->data);
+            return -1;
+        }
+        list->data = tmp;
     }
-    list->data = tmp;
 
     list->data[list->size] = value;
+    list->capacity++;
     list->size++;
     return 0;
 }

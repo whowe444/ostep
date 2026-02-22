@@ -3,6 +3,7 @@
 
 typedef struct {
     size_t size;
+    size_t capacity;
     int* data;
 } ReallocList;
 
