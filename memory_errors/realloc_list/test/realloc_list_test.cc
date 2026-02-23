@@ -1,3 +1,5 @@
+#include <vector>
+#include <cstdlib>
 #include "realloc_list_test.hh"
 
 TEST_F(ReallocListTest, EmptyList) {
@@ -136,6 +138,26 @@ TEST_F(ReallocListTest, Iterator) {
     EXPECT_EQ(ReallocListIterator_next(&it), 3);
 
     EXPECT_FALSE(ReallocListIterator_hasNext(&it));
+}
+
+TEST_F(ReallocListTest, AddAndRemoveAll) {
+    std::vector<int> expected;
+    std::srand(42);
+    const int ELEMENTS = 100;
+
+    for (int i = 0; i < ELEMENTS; i++) {
+        int val = std::rand();
+        expected.push_back(val);
+        ReallocList_add(list, val);
+    }
+
+    for (int i = 0; i < ELEMENTS; i++) {
+        int val;
+        EXPECT_EQ(ReallocList_remove(list, 0, &val), 0);
+        EXPECT_EQ(val, expected[i]);
+    }
+
+    EXPECT_EQ(ReallocList_size(list), 0);
 }
 
 int main(int argc, char **argv) {

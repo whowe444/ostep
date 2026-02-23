@@ -6,7 +6,7 @@
 
 static void ReallocList_shiftdown(ReallocList *list, size_t index) {
     for (size_t i = index; i < list->size - 1; i++) {
-        list->data[index] = list->data[index+1];
+        list->data[i] = list->data[i+1];
     }
 }
 
@@ -23,7 +23,7 @@ int ReallocList_remove(ReallocList *list, size_t index, int* return_value) {
 }
 
 int ReallocList_add(ReallocList *list, int value) {
-    // If the list is empty, double the capacity.
+    // If the list is full, double the capacity.
     if (list->size == list->capacity) {
         int* tmp = (int*) realloc(list->data, list->capacity * 2 * sizeof(int));
         if (tmp == NULL) {
@@ -32,10 +32,10 @@ int ReallocList_add(ReallocList *list, int value) {
             return -1;
         }
         list->data = tmp;
+        list->capacity*=2;
     }
 
     list->data[list->size] = value;
-    list->capacity++;
     list->size++;
     return 0;
 }
