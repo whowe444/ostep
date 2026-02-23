@@ -8,9 +8,9 @@ GTESTFLAGS = -I/usr/local/include  -L/usr/local/lib64 -lgtest -lgtest_main -lpth
 SRC_DIR  = src
 TEST_DIR = test
 
-LIB_SRC  = $(SRC_DIR)/realloc_list.c
-LIB_HDR  = $(SRC_DIR)/realloc_list.h
-LIB_OBJ  = $(SRC_DIR)/realloc_list.o
+LIB_SRC  = $(SRC_DIR)/realloc_list.c $(SRC_DIR)/realloc_list_iterator.c
+LIB_HDR  = $(SRC_DIR)/realloc_list.h $(SRC_DIR)/realloc_list_iterator.h
+LIB_OBJ  = $(SRC_DIR)/realloc_list.o $(SRC_DIR)/realloc_list_iterator.o
 LIB	 = librealloc_list.so
 
 TEST_SRC = $(wildcard $(TEST_DIR)/*.cc)
@@ -25,7 +25,7 @@ lib: $(LIB)
 $(LIB): $(LIB_OBJ)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-$(LIB_OBJ): $(LIB_SRC) $(LIB_HDR)
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c $(LIB_HDR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 test: $(LIB) $(TEST_SRC)
