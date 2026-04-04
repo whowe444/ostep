@@ -113,7 +113,7 @@ int LinkedList::Remove(int index) {
     while (ptr) {
         if (i == index) {
             // check if tail
-            if (i == (int)this->GetSize() - 1) this->tail = prev;
+            if (i == n - 1) this->tail = prev;
 
             // Delete this node
             prev->next = ptr->next;

@@ -182,7 +182,9 @@ TEST_F(LinkedListTest, RemoveLastThenAdd) {
     EXPECT_EQ(list->Remove(0), 1);
 
     EXPECT_EQ(list->GetSize(), 0);
-    EXPECT_TRUE(list->Add(2)); // would segfault if tail isn't updated
+
+    // would segfault if tail isn't updated
+    EXPECT_TRUE(list->Add(2));
 
     EXPECT_EQ(list->GetSize(), 1);
     EXPECT_EQ(list->Get(0), 2);
