@@ -70,7 +70,7 @@ TEST_F(ConcurrentLinkedListTest, AddMultipleElements) {
 }
 
 TEST_F(ConcurrentLinkedListTest, CopyAssignmentSelf) {
-    ConcurrentLinkedList list1 = ConcurrentLinkedList();
+    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
     list1.Add(1);
     list1 = list1;
     
@@ -78,7 +78,7 @@ TEST_F(ConcurrentLinkedListTest, CopyAssignmentSelf) {
 }
 
 TEST_F(ConcurrentLinkedListTest, CopyAssignment) {
-    ConcurrentLinkedList list1 = ConcurrentLinkedList();
+    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     ConcurrentLinkedList list2 = list1;
@@ -92,7 +92,7 @@ TEST_F(ConcurrentLinkedListTest, CopyAssignment) {
 }
 
 TEST_F(ConcurrentLinkedListTest, CopyConstructor) {
-    ConcurrentLinkedList list1 = ConcurrentLinkedList();
+    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     ConcurrentLinkedList list2 (list1);
@@ -107,7 +107,7 @@ TEST_F(ConcurrentLinkedListTest, CopyConstructor) {
 }
 
 TEST_F(ConcurrentLinkedListTest, MoveAssignmentSelf) {
-    ConcurrentLinkedList list1 = ConcurrentLinkedList();
+    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
     list1.Add(1);
     list1 = std::move(list1);
     
@@ -115,7 +115,7 @@ TEST_F(ConcurrentLinkedListTest, MoveAssignmentSelf) {
 }
 
 TEST_F(ConcurrentLinkedListTest, MoveAssignment) {
-    ConcurrentLinkedList list1 = ConcurrentLinkedList();
+    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     ConcurrentLinkedList list2 = std::move(list1);
@@ -130,7 +130,7 @@ TEST_F(ConcurrentLinkedListTest, MoveAssignment) {
 }
 
 TEST_F(ConcurrentLinkedListTest, MoveConstructor) {
-    ConcurrentLinkedList list1 = ConcurrentLinkedList();
+    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     ConcurrentLinkedList list2 (std::move(list1));

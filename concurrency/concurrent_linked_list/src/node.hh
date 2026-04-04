@@ -3,6 +3,7 @@
 #include <memory>
 #include <mutex>
 
+template<typename T>
 class Node {
 
 public:
@@ -11,14 +12,14 @@ public:
     Node() = default;
 
     // All Args Constructor
-    Node(Node* node, int value)
+    Node(Node<T>* node, int value)
         : 
         next(node),
         value(value)
     {
     }
 
-    Node* next;
+    Node<T>* next;
     int value;
     std::mutex mtx;
 

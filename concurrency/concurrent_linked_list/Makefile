@@ -6,7 +6,6 @@ SRC_DIR   := src
 TEST_DIR  := test
 BUILD_DIR := build
 
-TARGET    := libConcurrentLinkedList.so
 TEST_BIN  := $(BUILD_DIR)/test_runner
 
 SRCS      := $(wildcard $(SRC_DIR)/*.cc)
@@ -17,16 +16,11 @@ TEST_OBJS := $(patsubst $(TEST_DIR)/%.cc, $(BUILD_DIR)/%.o, $(TEST_SRCS))
 
 .PHONY: all test clean
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
-	$(CXX) -shared -o $@ $^
-
-test: $(TARGET) $(TEST_BIN)
+test: $(TEST_BIN)
 	./$(TEST_BIN)
 
 $(TEST_BIN): $(TEST_OBJS) | $(BUILD_DIR)
-	$(CXX) -o $@ $^ -L. $(GTESTFLAGS) -lConcurrentLinkedList -Wl,-rpath,.
+	$(CXX) -o $@ $^ -L. $(GTESTFLAGS) -Wl,-rpath,.
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cc | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -37,4 +31,4 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+	rm -rf $(BUILD_DIR)

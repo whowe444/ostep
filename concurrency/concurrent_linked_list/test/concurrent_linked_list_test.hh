@@ -6,12 +6,12 @@
 class ConcurrentLinkedListTest : public ::testing::Test {
 
 protected:
-    std::unique_ptr<ConcurrentLinkedList> list;
+    std::unique_ptr<ConcurrentLinkedList<int>> list;
 
     ConcurrentLinkedListTest() = default;
 
     void SetUp() override {
-        list = std::make_unique<ConcurrentLinkedList>();
+        list = std::make_unique<ConcurrentLinkedList<int>>();
     }
 
     void TearDown() override {}
