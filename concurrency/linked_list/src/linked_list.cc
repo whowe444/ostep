@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 // Copy Ctor
-LinkedList::LinkedList(const LinkedList& other) {
+LinkedList::LinkedList(const LinkedList& other) : LinkedList() {
     Node* ptr = other.sentinel->next;
     while(ptr) {
         this->Add(ptr->value);
@@ -30,16 +30,35 @@ LinkedList& LinkedList::operator=(const LinkedList& other) {
 }
 
 // Move Ctor
-LinkedList::LinkedList(LinkedList&& other) {
-    throw std::logic_error(("unreachable!"));
+LinkedList::LinkedList(LinkedList&& other) noexcept
+    :
+        sentinel(other.sentinel),
+        size(other.size)
+{
+    other.sentinel = nullptr;
+    other.size = 0;
 }
 
 // Move Assignment
-LinkedList& LinkedList::operator=(LinkedList&& other) {
+LinkedList& LinkedList::operator=(LinkedList&& other) noexcept {
     // Self assignment guard
     if (this == &other) return *this;
 
-    throw std::logic_error(("unreachable!"));
+    // Clear out this list
+    this->Clear();
+
+    // Delete old sentinel
+    auto old_sentinel = this->sentinel;
+    delete(old_sentinel);
+
+    this->sentinel = other.sentinel;
+    this->size = other.size;
+
+    // Null out other's sentinel
+    other.sentinel = nullptr;
+    other.size = 0;
+
+    return *this;
 }
 
 
@@ -93,6 +112,7 @@ int LinkedList::Remove(int index) {
             // Delete this node
             prev->next = ptr->next;
             int return_val = ptr->value;
+            this->size --;
             delete(ptr);
             return return_val;
         } else {

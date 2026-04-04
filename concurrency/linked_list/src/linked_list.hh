@@ -31,10 +31,10 @@ public:
     LinkedList& operator=(const LinkedList& other);
 
     // Move Ctor
-    LinkedList(LinkedList&& other);
+    LinkedList(LinkedList&& other) noexcept;
 
     // Move Assignemnt
-    LinkedList& operator=(LinkedList&&);
+    LinkedList& operator=(LinkedList&&) noexcept;
 
     // GetSize
     size_t GetSize();

@@ -74,5 +74,6 @@ TEST_F(LinkedListTest, TestRemove) {
     
     // Verify
     EXPECT_EQ(list->Get(0), second_value);
+    EXPECT_EQ(list->GetSize(), 1);
 
 }
