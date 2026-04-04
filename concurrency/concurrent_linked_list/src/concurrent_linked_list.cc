@@ -151,12 +151,14 @@ bool ConcurrentLinkedList::Remove(int value) {
 
 void ConcurrentLinkedList::Clear() {
     if (!sentinel) return;
+    std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
     Node* ptr = this->sentinel->next;
     while (ptr) {
+        std::unique_lock<std::mutex> curr_lock(ptr->mtx);
         auto temp = ptr->next;
+        curr_lock.unlock();
         delete(ptr);
         ptr = temp;
-
     }
 
     this->sentinel->next = nullptr;

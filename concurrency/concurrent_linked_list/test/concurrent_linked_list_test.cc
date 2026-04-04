@@ -33,6 +33,10 @@ TEST_F(ConcurrentLinkedListTest, AddTwoElements) {
     EXPECT_TRUE(list->Contains(second_new_value));
 }
 
+TEST_F(ConcurrentLinkedListTest, RemoveEmpty) {
+    EXPECT_FALSE(list->Remove(50));
+}
+
 TEST_F(ConcurrentLinkedListTest, TestRemove) {
     // Add Elements
     const int first_value = 99;
@@ -156,17 +160,73 @@ TEST_F(ConcurrentLinkedListTest, RemoveLastThenAdd) {
 }
 
 TEST_F(ConcurrentLinkedListTest, ConcurrentAdd) {
-    ConcurrentLinkedList list;
     const int NUM_THREADS = 10;
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; i++) {
-        threads.emplace_back([&list, i]() {
+        threads.emplace_back([this, i]() {
             for (int j = 0; j < NUM_ELEMENTS; j++) {
-                list.Add(i * NUM_ELEMENTS + j);
+                this->list->Add(i * NUM_ELEMENTS + j);
             }
         });
     }
     for (auto& t : threads) t.join();
-    EXPECT_EQ(list.GetSize(), NUM_THREADS * NUM_ELEMENTS);
+    EXPECT_EQ(list->GetSize(), NUM_THREADS * NUM_ELEMENTS);
+}
+
+TEST_F(ConcurrentLinkedListTest, ConcurrentDelete) {
+    const int NUM_ELEMENTS = 100;
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < NUM_ELEMENTS; i++) list->Add(i);
+
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        threads.emplace_back([this, i]() {
+            this->list->Remove(i);
+        });
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    EXPECT_EQ(list->GetSize(), 0);
+}
+
+TEST_F(ConcurrentLinkedListTest, ConcurrentAddAndDelete) {
+    const int NUM_ELEMENTS = 100;
+    std::vector<std::thread> adders;
+    std::vector<std::thread> removers;
+
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        adders.emplace_back([this, i]() {
+            this->list->Add(i);
+        });
+    }
+
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        removers.emplace_back([this, i]() {
+            this->list->Remove(i);
+        });
+    }
+
+    for (auto& adder : adders) adder.join();
+    for (auto& remover : removers) remover.join();
+}
+
+TEST_F(ConcurrentLinkedListTest, ConcurrentContains) {
+    const int NUM_ELEMENTS = 100;
+    std::vector<std::thread> contains;
+
+    // Add elements
+    for (int i = 0; i < NUM_ELEMENTS; i++) list->Add(i);
+
+    // Add contains threads
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        contains.emplace_back([this, i]() {
+            EXPECT_TRUE(this->list->Contains(i));
+        });
+    }
+
+    for (auto& contain : contains) contain.join();
 }
