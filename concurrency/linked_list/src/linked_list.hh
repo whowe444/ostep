@@ -16,8 +16,25 @@ public:
 
     // Destructor
     ~LinkedList() {
-        delete(sentinel);
+        Node* ptr = sentinel;
+        while (ptr) {
+            auto temp = ptr->next;
+            delete(ptr);
+            ptr = temp;
+        }
     }
+
+    // Copy Ctor
+    LinkedList(const LinkedList& other);
+
+    // Copy Assignment
+    LinkedList& operator=(const LinkedList& other);
+
+    // Move Ctor
+    LinkedList(LinkedList&& other);
+
+    // Move Assignemnt
+    LinkedList& operator=(LinkedList&&);
 
     // GetSize
     size_t GetSize();
@@ -31,6 +48,14 @@ public:
 
     // Get Value at index
     int Get(int index);
+
+    // Remove Value at index
+    // Returns value removed
+    int Remove(int index);
+
+    // Clear out the list so that it is
+    // empty.
+    void Clear();
 
 private:
 

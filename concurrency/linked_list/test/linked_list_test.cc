@@ -38,11 +38,41 @@ TEST_F(LinkedListTest, GetWhenEmpty) {
     }, std::runtime_error);
 }
 
-TEST_F(LinkedListTest, TestIndexOutOfBounds) {
+TEST_F(LinkedListTest, TestGetIndexOutOfBounds) {
     // First add an element to the list
     list->Add(100);
 
     EXPECT_THROW({
         list->Get(5);
     }, std::runtime_error);
+}
+
+TEST_F(LinkedListTest, RemoveWhenEmpty) {
+    EXPECT_THROW({
+        list->Remove(5);
+    }, std::runtime_error);
+}
+
+TEST_F(LinkedListTest, TestRemoveIndexOutOfBounds) {
+    // First add an element to the list
+    list->Add(100);
+
+    EXPECT_THROW({
+        list->Remove(5);
+    }, std::runtime_error);
+}
+
+TEST_F(LinkedListTest, TestRemove) {
+    // Add Elements
+    const int first_value = 99;
+    list->Add(first_value);
+    const int second_value = 100;
+    list->Add(second_value);
+
+    // Now Remove
+    EXPECT_EQ(list->Remove(0), first_value);
+    
+    // Verify
+    EXPECT_EQ(list->Get(0), second_value);
+
 }
