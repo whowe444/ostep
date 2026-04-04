@@ -95,7 +95,7 @@ TEST_F(LinkedListTest, AddMultipleElements) {
 }
 
 TEST_F(LinkedListTest, CopyAssignmentSelf) {
-    LinkedList list1 = LinkedList();
+    LinkedList list1 = LinkedList<int>();
     list1.Add(1);
     list1 = list1;
     
@@ -103,7 +103,7 @@ TEST_F(LinkedListTest, CopyAssignmentSelf) {
 }
 
 TEST_F(LinkedListTest, CopyAssignment) {
-    LinkedList list1 = LinkedList();
+    LinkedList list1 = LinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     LinkedList list2 = list1;
@@ -117,7 +117,7 @@ TEST_F(LinkedListTest, CopyAssignment) {
 }
 
 TEST_F(LinkedListTest, CopyConstructor) {
-    LinkedList list1 = LinkedList();
+    LinkedList list1 = LinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     LinkedList list2 (list1);
@@ -132,7 +132,7 @@ TEST_F(LinkedListTest, CopyConstructor) {
 }
 
 TEST_F(LinkedListTest, MoveAssignmentSelf) {
-    LinkedList list1 = LinkedList();
+    LinkedList list1 = LinkedList<int>();
     list1.Add(1);
     list1 = std::move(list1);
     
@@ -140,7 +140,7 @@ TEST_F(LinkedListTest, MoveAssignmentSelf) {
 }
 
 TEST_F(LinkedListTest, MoveAssignment) {
-    LinkedList list1 = LinkedList();
+    LinkedList list1 = LinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     LinkedList list2 = std::move(list1);
@@ -158,7 +158,7 @@ TEST_F(LinkedListTest, MoveAssignment) {
 }
 
 TEST_F(LinkedListTest, MoveConstructor) {
-    LinkedList list1 = LinkedList();
+    LinkedList list1 = LinkedList<int>();
     list1.Add(1);
     list1.Add(2);
     LinkedList list2 (std::move(list1));

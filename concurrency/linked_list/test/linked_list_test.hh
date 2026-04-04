@@ -6,12 +6,12 @@
 class LinkedListTest : public ::testing::Test {
 
 protected:
-    std::unique_ptr<LinkedList> list;
+    std::unique_ptr<LinkedList<int>> list;
 
     LinkedListTest() = default;
 
     void SetUp() override {
-        list = std::make_unique<LinkedList>();
+        list = std::make_unique<LinkedList<int>>();
     }
 
     void TearDown() override {}
