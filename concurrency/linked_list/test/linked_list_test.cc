@@ -75,5 +75,116 @@ TEST_F(LinkedListTest, TestRemove) {
     // Verify
     EXPECT_EQ(list->Get(0), second_value);
     EXPECT_EQ(list->GetSize(), 1);
-
 }
+
+TEST_F(LinkedListTest, AddMultipleElements) {
+    const int NUM_ELEMENTS = 100;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        list->Add(i);
+    }
+
+    EXPECT_EQ(list->GetSize(), NUM_ELEMENTS);
+
+    // Remove an elemnent
+    EXPECT_EQ(list->Remove(50), 50);
+    EXPECT_EQ(list->GetSize(), NUM_ELEMENTS - 1);
+
+    // Verify first and last element
+    EXPECT_EQ(list->Get(0), 0);
+    EXPECT_EQ(list->Get(98), 99);
+}
+
+TEST_F(LinkedListTest, CopyAssignmentSelf) {
+    LinkedList list1 = LinkedList();
+    list1.Add(1);
+    list1 = list1;
+    
+    EXPECT_EQ(list1.GetSize(), 1);
+}
+
+TEST_F(LinkedListTest, CopyAssignment) {
+    LinkedList list1 = LinkedList();
+    list1.Add(1);
+    list1.Add(2);
+    LinkedList list2 = list1;
+
+    EXPECT_EQ(list1.GetSize(), list2.GetSize());
+    EXPECT_EQ(list1.Get(0), list2.Get(0));
+    EXPECT_EQ(list1.Get(1), list2.Get(1));
+
+    list2.Add(3);
+    EXPECT_NE(list1.GetSize(), list2.GetSize());
+}
+
+TEST_F(LinkedListTest, CopyConstructor) {
+    LinkedList list1 = LinkedList();
+    list1.Add(1);
+    list1.Add(2);
+    LinkedList list2 (list1);
+
+    EXPECT_EQ(list1.GetSize(), list2.GetSize());
+    EXPECT_EQ(list1.Get(0), list2.Get(0));
+    EXPECT_EQ(list1.Get(1), list2.Get(1));
+
+    // Mutating list2 doesn't affect list 1.
+    list2.Add(3);
+    EXPECT_NE(list1.GetSize(), list2.GetSize());
+}
+
+TEST_F(LinkedListTest, MoveAssignmentSelf) {
+    LinkedList list1 = LinkedList();
+    list1.Add(1);
+    list1 = std::move(list1);
+    
+    EXPECT_EQ(list1.GetSize(), 1); 
+}
+
+TEST_F(LinkedListTest, MoveAssignment) {
+    LinkedList list1 = LinkedList();
+    list1.Add(1);
+    list1.Add(2);
+    LinkedList list2 = std::move(list1);
+
+    EXPECT_EQ(list2.Get(0), 1);
+    EXPECT_EQ(list2.Get(1), 2);
+    EXPECT_EQ(list2.GetSize(), 2);
+    EXPECT_NE(list1.GetSize(), list2.GetSize());
+
+    list2.Add(3);
+    EXPECT_NE(list1.GetSize(), list2.GetSize());
+
+    // The old list should thrown an exception
+    EXPECT_THROW(list1.Get(0), std::runtime_error);
+}
+
+TEST_F(LinkedListTest, MoveConstructor) {
+    LinkedList list1 = LinkedList();
+    list1.Add(1);
+    list1.Add(2);
+    LinkedList list2 (std::move(list1));
+
+    EXPECT_EQ(list2.Get(0), 1);
+    EXPECT_EQ(list2.Get(1), 2);
+    EXPECT_EQ(list2.GetSize(), 2);
+    EXPECT_NE(list1.GetSize(), list2.GetSize());
+
+    // Mutating list2 doesn't affect list 1
+    list2.Add(3);
+    EXPECT_NE(list1.GetSize(), list2.GetSize());
+
+    // The old list should thrown an exception
+    EXPECT_THROW(list1.Get(0), std::runtime_error);
+}
+
+TEST_F(LinkedListTest, RemoveLastThenAdd) {
+    EXPECT_TRUE(list->Add(1));
+    EXPECT_EQ(list->GetSize(), 1);
+    EXPECT_EQ(list->Remove(0), 1);
+
+    EXPECT_EQ(list->GetSize(), 0);
+    EXPECT_TRUE(list->Add(2)); // would segfault if tail isn't updated
+
+    EXPECT_EQ(list->GetSize(), 1);
+    EXPECT_EQ(list->Get(0), 2);
+}
+

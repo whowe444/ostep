@@ -33,9 +33,11 @@ LinkedList& LinkedList::operator=(const LinkedList& other) {
 LinkedList::LinkedList(LinkedList&& other) noexcept
     :
         sentinel(other.sentinel),
+        tail(other.tail),
         size(other.size)
 {
     other.sentinel = nullptr;
+    other.tail = nullptr;
     other.size = 0;
 }
 
@@ -48,14 +50,15 @@ LinkedList& LinkedList::operator=(LinkedList&& other) noexcept {
     this->Clear();
 
     // Delete old sentinel
-    auto old_sentinel = this->sentinel;
-    delete(old_sentinel);
+    delete(this->sentinel);
 
     this->sentinel = other.sentinel;
+    this->tail = other.tail;
     this->size = other.size;
 
     // Null out other's sentinel
     other.sentinel = nullptr;
+    other.tail = nullptr;
     other.size = 0;
 
     return *this;
@@ -109,15 +112,20 @@ int LinkedList::Remove(int index) {
     int i = 0;
     while (ptr) {
         if (i == index) {
+            // check if tail
+            if (i == (int)this->GetSize() - 1) this->tail = prev;
+
             // Delete this node
             prev->next = ptr->next;
             int return_val = ptr->value;
             this->size --;
             delete(ptr);
+
             return return_val;
         } else {
             i++;
             ptr = ptr->next;
+            prev = prev->next;
         }
     }
 
@@ -125,6 +133,7 @@ int LinkedList::Remove(int index) {
 }
 
 void LinkedList::Clear() {
+    if (!sentinel) return;
     Node* ptr = this->sentinel->next;
 
     while (ptr) {

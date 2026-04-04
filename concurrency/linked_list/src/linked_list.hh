@@ -16,12 +16,8 @@ public:
 
     // Destructor
     ~LinkedList() {
-        Node* ptr = sentinel;
-        while (ptr) {
-            auto temp = ptr->next;
-            delete(ptr);
-            ptr = temp;
-        }
+        this->Clear();
+        delete(this->sentinel);
     }
 
     // Copy Ctor
