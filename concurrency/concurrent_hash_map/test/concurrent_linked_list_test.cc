@@ -15,7 +15,7 @@ TEST_F(ConcurrentLinkedListTest, IsEmpty) {
 
 TEST_F(ConcurrentLinkedListTest, Add) {
     const int new_value = 1;
-    EXPECT_TRUE(list->Add(new_value));
+    EXPECT_TRUE(list->Add(new_value, 0));
     EXPECT_EQ(list->GetSize(), 1);
     EXPECT_TRUE(list->Contains(new_value));
 }
@@ -25,8 +25,8 @@ TEST_F(ConcurrentLinkedListTest, AddTwoElements) {
     const int second_new_value = 3;
 
     // Add two new values
-    list->Add(new_value);
-    list->Add(second_new_value);
+    list->Add(new_value, 0);
+    list->Add(second_new_value, 0);
 
     EXPECT_EQ(list->GetSize(), 2);
     EXPECT_TRUE(list->Contains(new_value));
@@ -40,9 +40,9 @@ TEST_F(ConcurrentLinkedListTest, RemoveEmpty) {
 TEST_F(ConcurrentLinkedListTest, TestRemove) {
     // Add Elements
     const int first_value = 99;
-    list->Add(first_value);
+    list->Add(first_value, 0);
     const int second_value = 100;
-    list->Add(second_value);
+    list->Add(second_value, 0);
 
     // Now Remove
     EXPECT_TRUE(list->Remove(first_value));
@@ -55,7 +55,7 @@ TEST_F(ConcurrentLinkedListTest, TestRemove) {
 TEST_F(ConcurrentLinkedListTest, AddMultipleElements) {
     const int NUM_ELEMENTS = 100;
     for (int i = 0; i < NUM_ELEMENTS; i++) {
-        list->Add(i);
+        list->Add(i, 0);
     }
 
     EXPECT_EQ(list->GetSize(), NUM_ELEMENTS);
@@ -70,31 +70,31 @@ TEST_F(ConcurrentLinkedListTest, AddMultipleElements) {
 }
 
 TEST_F(ConcurrentLinkedListTest, CopyAssignmentSelf) {
-    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
-    list1.Add(1);
+    auto list1 = ConcurrentLinkedList<int, int>();
+    list1.Add(1, 0);
     list1 = list1;
     
     EXPECT_EQ(list1.GetSize(), 1);
 }
 
 TEST_F(ConcurrentLinkedListTest, CopyAssignment) {
-    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
-    list1.Add(1);
-    list1.Add(2);
+    auto list1 = ConcurrentLinkedList<int, int>();
+    list1.Add(1, 0);
+    list1.Add(2, 0);
     ConcurrentLinkedList list2 = list1;
 
     EXPECT_EQ(list1.GetSize(), list2.GetSize());
     EXPECT_EQ(list1.Contains(1), list2.Contains(1));
     EXPECT_EQ(list1.Contains(2), list2.Contains(2));
 
-    list2.Add(3);
+    list2.Add(3, 0);
     EXPECT_NE(list1.GetSize(), list2.GetSize());
 }
 
 TEST_F(ConcurrentLinkedListTest, CopyConstructor) {
-    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
-    list1.Add(1);
-    list1.Add(2);
+    auto list1 = ConcurrentLinkedList<int, int>();
+    list1.Add(1, 0);
+    list1.Add(2, 0);
     ConcurrentLinkedList list2 (list1);
 
     EXPECT_EQ(list1.GetSize(), list2.GetSize());
@@ -102,22 +102,22 @@ TEST_F(ConcurrentLinkedListTest, CopyConstructor) {
     EXPECT_EQ(list1.Contains(2), list2.Contains(2));
 
     // Mutating list2 doesn't affect list 1.
-    list2.Add(3);
+    list2.Add(3, 0);
     EXPECT_NE(list1.GetSize(), list2.GetSize());
 }
 
 TEST_F(ConcurrentLinkedListTest, MoveAssignmentSelf) {
-    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
-    list1.Add(1);
+    auto list1 = ConcurrentLinkedList<int, int>();
+    list1.Add(1, 0);
     list1 = std::move(list1);
     
     EXPECT_EQ(list1.GetSize(), 1); 
 }
 
 TEST_F(ConcurrentLinkedListTest, MoveAssignment) {
-    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
-    list1.Add(1);
-    list1.Add(2);
+    auto list1 = ConcurrentLinkedList<int, int>();
+    list1.Add(1, 0);
+    list1.Add(2, 0);
     ConcurrentLinkedList list2 = std::move(list1);
 
     EXPECT_TRUE(list2.Contains(1));
@@ -125,14 +125,14 @@ TEST_F(ConcurrentLinkedListTest, MoveAssignment) {
     EXPECT_EQ(list2.GetSize(), 2);
     EXPECT_NE(list1.GetSize(), list2.GetSize());
 
-    list2.Add(3);
+    list2.Add(3, 0);
     EXPECT_NE(list1.GetSize(), list2.GetSize());
 }
 
 TEST_F(ConcurrentLinkedListTest, MoveConstructor) {
-    ConcurrentLinkedList<int> list1 = ConcurrentLinkedList<int>();
-    list1.Add(1);
-    list1.Add(2);
+    auto list1 = ConcurrentLinkedList<int, int>();
+    list1.Add(1, 0);
+    list1.Add(2, 0);
     ConcurrentLinkedList list2 (std::move(list1));
 
     EXPECT_TRUE(list2.Contains(1));
@@ -141,19 +141,19 @@ TEST_F(ConcurrentLinkedListTest, MoveConstructor) {
     EXPECT_NE(list1.GetSize(), list2.GetSize());
 
     // Mutating list2 doesn't affect list 1
-    list2.Add(3);
+    list2.Add(3, 0);
     EXPECT_NE(list1.GetSize(), list2.GetSize());
 }
 
 TEST_F(ConcurrentLinkedListTest, RemoveLastThenAdd) {
-    EXPECT_TRUE(list->Add(1));
+    EXPECT_TRUE(list->Add(1, 0));
     EXPECT_EQ(list->GetSize(), 1);
     EXPECT_TRUE(list->Remove(1));
 
     EXPECT_EQ(list->GetSize(), 0);
 
     // would segfault if tail isn't updated
-    EXPECT_TRUE(list->Add(2));
+    EXPECT_TRUE(list->Add(2, 0));
 
     EXPECT_EQ(list->GetSize(), 1);
     EXPECT_TRUE(list->Contains(2));
@@ -166,7 +166,7 @@ TEST_F(ConcurrentLinkedListTest, ConcurrentAdd) {
     for (int i = 0; i < NUM_THREADS; i++) {
         threads.emplace_back([this, i]() {
             for (int j = 0; j < NUM_ELEMENTS; j++) {
-                this->list->Add(i * NUM_ELEMENTS + j);
+                this->list->Add(i * NUM_ELEMENTS + j, 0);
             }
         });
     }
@@ -178,7 +178,7 @@ TEST_F(ConcurrentLinkedListTest, ConcurrentDelete) {
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> threads;
 
-    for (int i = 0; i < NUM_ELEMENTS; i++) list->Add(i);
+    for (int i = 0; i < NUM_ELEMENTS; i++) list->Add(i, 0);
 
     for (int i = 0; i < NUM_ELEMENTS; i++) {
         threads.emplace_back([this, i]() {
@@ -200,7 +200,7 @@ TEST_F(ConcurrentLinkedListTest, ConcurrentAddAndDelete) {
 
     for (int i = 0; i < NUM_ELEMENTS; i++) {
         adders.emplace_back([this, i]() {
-            this->list->Add(i);
+            this->list->Add(i, 0);
         });
     }
 
@@ -219,7 +219,7 @@ TEST_F(ConcurrentLinkedListTest, ConcurrentContains) {
     std::vector<std::thread> contains;
 
     // Add elements
-    for (int i = 0; i < NUM_ELEMENTS; i++) list->Add(i);
+    for (int i = 0; i < NUM_ELEMENTS; i++) list->Add(i, 0);
 
     // Add contains threads
     for (int i = 0; i < NUM_ELEMENTS; i++) {
@@ -235,7 +235,7 @@ TEST_F(ConcurrentLinkedListTest, BenchmarkAdd) {
     auto start = std::chrono::high_resolution_clock::now();
     const int NUM_ELEMENTS = 1000;
     for (int i = 0; i < NUM_ELEMENTS; i++) {
-        this->list->Add(i);
+        this->list->Add(i, 0);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

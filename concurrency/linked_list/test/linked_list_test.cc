@@ -190,3 +190,32 @@ TEST_F(LinkedListTest, RemoveLastThenAdd) {
     EXPECT_EQ(list->Get(0), 2);
 }
 
+TEST_F(LinkedListTest, BenchmarkAdd) {
+    auto start = std::chrono::high_resolution_clock::now();
+    const int NUM_ELEMENTS = 10000000;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Add(i);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+
+    std::cout << "BenchmarkAdd took: " << std::to_string(duration.count() / (double)NUM_ELEMENTS)
+        << " nanoseconds per Add operation." << std::endl;
+}
+
+TEST_F(LinkedListTest, BenchmarkRemove) {
+    const int NUM_ELEMENTS = 10000000;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Add(i);
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Remove(0);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+
+    std::cout << "BenchmarkAdd took: " << std::to_string(duration.count() / (double)NUM_ELEMENTS)
+        << " nanoseconds per Remove operation." << std::endl;
+}
