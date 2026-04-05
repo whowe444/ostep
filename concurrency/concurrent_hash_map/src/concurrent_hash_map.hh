@@ -28,24 +28,36 @@ public:
     // Insert
     bool Insert(const K& key, const V& value) {
         // Add {K, V} pair.
-        this->size++;
-        return this->buckets[this->Hash(key)].Add(key, value);
+        bool tReturn = false;
+        if (this->buckets[this->Hash(key)].Add(key, value)) {
+            this->size++;
+            tReturn = true;
+        }
+        return tReturn;
     }
 
     // Contains
     bool Contains(const K& key) {
-        return this->buckets[this->Hash(key)].Contains(key);
+        bool tReturn = false;
+        if (this->buckets[this->Hash(key)].Contains(key)) {
+            tReturn = true;
+        }
+        return tReturn;
     }
 
     // Remove
     bool Remove(const K& key) {
-        this->size--;
-        return this->buckets[this->Hash(key)].Remove(key);
+        bool tReturn = false;
+        if (this->buckets[this->Hash(key)].Remove(key)) {
+            this->size--;
+            tReturn = true;
+        }
+        return tReturn;
     }
 
 private:
 
-    int Hash(const K& key) {
+    size_t Hash(const K& key) {
         return std::hash<K>{}(key) % NUM_BUCKETS;
     }
 
