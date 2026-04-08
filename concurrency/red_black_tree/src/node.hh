@@ -19,6 +19,7 @@ public:
         : 
         left(left),
         right(right),
+        parent(parent),
         color(color),
         value(value)
     {

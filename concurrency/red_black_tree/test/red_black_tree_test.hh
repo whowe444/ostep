@@ -6,12 +6,12 @@
 class RedBlackTreeTest : public ::testing::Test {
 
 protected:
-    std::unique_ptr<RedBlackTree<int>> tree;
+    std::unique_ptr<RedBlackTree<int, int>> tree;
 
     RedBlackTreeTest() = default;
 
     void SetUp() override {
-        tree = std::make_unique<RedBlackTree<int>>();
+        tree = std::make_unique<RedBlackTree<int, int>>();
     }
 
     void TearDown() override {}
