@@ -112,7 +112,7 @@ TEST_F(RedBlackTreeTest, DeleteRootNodeNoChildren) {
 }
 
 TEST_F(RedBlackTreeTest, DeleteNonExistingWhenEmpty) {
-    EXPECT_THROW(tree->Delete(67), std::runtime_error);
+    EXPECT_FALSE(tree->Delete(67).has_value());
 }
 
 TEST_F(RedBlackTreeTest, DeleteNonExisting) {

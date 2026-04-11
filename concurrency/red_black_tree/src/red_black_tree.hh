@@ -15,7 +15,7 @@ public:
 
     // Destructor
     ~RedBlackTree() {
-        delete root;
+        this->Clear(this->root);
     }
 
     // GetSize
@@ -27,6 +27,15 @@ public:
     bool IsEmpty() {
         return this->GetSize() == 0;
     }
+
+    void Clear(Node<std::pair<K, V>>* node) {
+        if (!node) return;
+        if (node->left) Clear(node->left);
+        if (node->right) Clear(node->right);
+        delete node;
+        this->size--;
+    }
+
 
     // Insert
     bool Insert(const K& key, const V& value) {
@@ -55,7 +64,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->left = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Black, {key, value});
+                    ptr->left = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
                     return true;
                 }
@@ -65,7 +74,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->right = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Black, {key, value});
+                    ptr->right = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
                     return true;
                 }
@@ -77,7 +86,7 @@ public:
 
     // Get
     std::optional<V> Get(const K& key) {
-        if (this->IsEmpty()) throw std::runtime_error("Get: Tree is empty!");
+        if (this->IsEmpty()) return std::nullopt;
 
         auto ptr = this->root;
         while (ptr) {
@@ -90,7 +99,7 @@ public:
 
     // Delete
     std::optional<V> Delete(const K& key) {
-        if (this->IsEmpty()) throw std::runtime_error("Delete: Tree is empty!");
+        if (this->IsEmpty()) return std::nullopt;
 
         // special case for root node
         auto ptr = this->root;
@@ -164,18 +173,17 @@ public:
 
                         auto delete_node = ptr->right;
                         auto return_value = delete_node->value.second;
-
                         // now delete the node
                         if (!delete_node->left) {
-                            // replace with the left child
-                            ptr->right = delete_node->left;
+                            // replace with the right child
+                            ptr->right = delete_node->right;
                             if (ptr->right) ptr->right->parent = ptr;
                             delete delete_node;
                             this->size--;
                             return return_value;
                         } else if(!delete_node->right) {
-                            // replace with the right child
-                            ptr->right = delete_node->right;
+                            // replace with the left child
+                            ptr->right = delete_node->left;
                             if (ptr->right) ptr->right->parent = ptr;
                             delete delete_node;
                             this->size--;
@@ -196,7 +204,6 @@ public:
 
         return std::nullopt;
     }
-
 
 private:
 
