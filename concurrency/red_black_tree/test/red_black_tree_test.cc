@@ -260,3 +260,77 @@ TEST_F(RedBlackTreeTest, MultipleInsertionsBeforeDeleteLeaf) {
     EXPECT_TRUE(tree->Get(9).has_value());
     EXPECT_FALSE(tree->Get(6).has_value());
 }
+
+TEST_F(RedBlackTreeTest, DeleteWhereSuccessorIsRightChildsLeftDescendant) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {8, 80}
+    };
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+    EXPECT_EQ(tree->GetSize(), pairs.size());
+    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
+
+    EXPECT_TRUE(tree->Get(5).has_value());
+    EXPECT_TRUE(tree->Get(3).has_value());
+    EXPECT_FALSE(tree->Get(7).has_value());
+    EXPECT_TRUE(tree->Get(1).has_value());
+    EXPECT_TRUE(tree->Get(4).has_value());
+    EXPECT_TRUE(tree->Get(9).has_value());
+    EXPECT_TRUE(tree->Get(8).has_value());
+}
+
+TEST_F(RedBlackTreeTest, DeleteWhereSuccessorIsRightChildsRightDescendant) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
+    };
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+    EXPECT_EQ(tree->GetSize(), pairs.size());
+    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
+
+    EXPECT_TRUE(tree->Get(5).has_value());
+    EXPECT_TRUE(tree->Get(3).has_value());
+    EXPECT_FALSE(tree->Get(7).has_value());
+    EXPECT_TRUE(tree->Get(1).has_value());
+    EXPECT_TRUE(tree->Get(4).has_value());
+    EXPECT_TRUE(tree->Get(9).has_value());
+    EXPECT_TRUE(tree->Get(10).has_value());
+}
+
+TEST_F(RedBlackTreeTest, DeleteWhereSuccessorIsRightChildsLeftDescendantWithRightChild) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {10, 100}, {8, 80}, {9, 90}
+    };
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+    EXPECT_EQ(tree->GetSize(), pairs.size());
+    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
+
+    EXPECT_TRUE(tree->Get(5).has_value());
+    EXPECT_TRUE(tree->Get(3).has_value());
+    EXPECT_FALSE(tree->Get(7).has_value());
+    EXPECT_TRUE(tree->Get(1).has_value());
+    EXPECT_TRUE(tree->Get(4).has_value());
+    EXPECT_TRUE(tree->Get(8).has_value());
+    EXPECT_TRUE(tree->Get(9).has_value());
+    EXPECT_TRUE(tree->Get(10).has_value());
+}
+
+TEST_F(RedBlackTreeTest, DeleteNodeWithOnlyLeftChild) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {2, 20}
+    };
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+    EXPECT_EQ(tree->Delete(3).value(), 30);
+    EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
+    EXPECT_TRUE(tree->Get(2).has_value());
+    EXPECT_FALSE(tree->Get(3).has_value());
+}
