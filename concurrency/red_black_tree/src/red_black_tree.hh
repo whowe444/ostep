@@ -310,8 +310,34 @@ private:
     }
 
     void leftRotation(Node<std::pair<K, V>>* node) {
-        // TODO: unimplemented
+        // node must have a right child for left rotations
+        assert(node->right != nullptr);
+        auto right_child = node->right;
         auto parent = node->parent;
+        auto new_right_child = right_child->left;
+
+        // Reattach original node to its new parent
+        right_child->left = node;
+        node->parent = right_child;
+
+        node->right = new_right_child;
+        if (new_right_child) new_right_child->parent = node;
+
+        if (!parent) {
+            // we are the root node
+            // right child becomes the new root node
+            this->root = right_child;
+            right_child->parent = nullptr;
+        } else {
+            auto right_side = parent->right == node;
+            right_child->parent = parent;
+            if (right_side) {
+                parent->right = right_child;
+            } else {
+                parent->left = right_child;
+            }
+
+        }
 
     }
 
@@ -327,29 +353,23 @@ private:
         node->parent = left_child;
 
         node->left = new_left_child;
-        if (new_left_child) {
-            new_left_child->parent = node;
-        }
+        if (new_left_child) new_left_child->parent = node;
 
         if (!parent) {
             // we are the root node
             // left child becomes the new root node
             this->root = left_child;
-            return;
+            left_child->parent = nullptr;
         } else {
             auto right_side = parent->right == node;
-            // Attach the new right child
-            // todo this could happen on the left too
+            left_child->parent = parent;
             if (right_side) {
                 parent->right = left_child;
-                left_child->parent = parent;
             } else {
                 parent->left = left_child;
-                left_child->parent = parent;
             }
         }
     }
-
 
     Node<std::pair<K, V>>* root;
     size_t size;
