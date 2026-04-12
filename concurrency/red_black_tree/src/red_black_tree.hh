@@ -275,19 +275,20 @@ private:
             this->rebalanceInsertion(grandparent);
         } else {
             // Case 2: Parent Red, Uncle Black
-            bool parent_is_left = grandparent->left == node->parent;
-            bool node_is_left = node->parent->left == node;
+            bool parent_is_left = grandparent->left == parent;
+            bool node_is_left = parent->left == node;
             bool is_triangle = parent_is_left != node_is_left;
             
             if (is_triangle) {
                 // perform a rotation on the parent to produce a line
                 if (parent_is_left) {
                     // perform a left rotation
-                    this->leftRotation(node->parent);
+                    this->leftRotation(parent);
                 } else {
                     // perform a right rotation
-                    this->rightRotation(node->parent);
+                    this->rightRotation(parent);
                 }
+                parent = node;
             }
 
             // perform a rotation on the grandparent and recolor
@@ -299,8 +300,10 @@ private:
                 this->leftRotation(grandparent);
             }
 
-            // Recolor the grandparent to red, parent to black
+            // Recolor the grandparent to red since it is now a child
             grandparent->color = Color::Red;
+
+            // Recolor parent to black since it is now the root of the subtree
             parent->color = Color::Black;
             return;
         }
@@ -308,10 +311,43 @@ private:
 
     void leftRotation(Node<std::pair<K, V>>* node) {
         // TODO: unimplemented
+        auto parent = node->parent;
+
     }
 
     void rightRotation(Node<std::pair<K, V>>* node) {
-        // TODO: unimplemented
+        // node must have a left child for a right rotations
+        assert(node->left != nullptr);
+        auto left_child = node->left;
+        auto parent = node->parent;
+        auto new_left_child = left_child->right;
+
+        // Reattach original node to its new parent
+        left_child->right = node;
+        node->parent = left_child;
+
+        node->left = new_left_child;
+        if (new_left_child) {
+            new_left_child->parent = node;
+        }
+
+        if (!parent) {
+            // we are the root node
+            // left child becomes the new root node
+            this->root = left_child;
+            return;
+        } else {
+            auto right_side = parent->right == node;
+            // Attach the new right child
+            // todo this could happen on the left too
+            if (right_side) {
+                parent->right = left_child;
+                left_child->parent = parent;
+            } else {
+                parent->left = left_child;
+                left_child->parent = parent;
+            }
+        }
     }
 
 
