@@ -36,44 +36,6 @@ public:
         this->size--;
     }
 
-    void Validate() {
-        if (!this->root) return;
-        assert(this->root->color == Color::Black);
-        assert(this->root->parent == nullptr);
-        ValidateNode(this->root);
-    }
-
-    int ValidateNode(Node<std::pair<K, V>>* node) {
-        if (!node) return 1;
-
-        // Property 3: Red node must not have red children
-        if (node->color == Color::Red) {
-            assert(!node->left || node->left->color == Color::Black);
-            assert(!node->right || node->right->color == Color::Black);
-        }
-
-        // Property 4: Both subtrees must have the same black height
-        int left_black_height = this->ValidateNode(node->left);
-        int right_black_height = this->ValidateNode(node->right);
-        if (left_black_height != right_black_height) {
-            std::cout << "Black height violation at node: " << node->value.first 
-                    << " left_bh=" << left_black_height 
-                    << " right_bh=" << right_black_height << std::endl;
-            std::cout << "Node color: " << (node->color == Color::Black ? "Black" : "Red") << std::endl;
-            if (node->left) std::cout << "Left child: " << node->left->value.first << std::endl;
-            if (node->right) std::cout << "Right child: " << node->right->value.first << std::endl;
-        }
-
-        assert(left_black_height == right_black_height);
-
-        // Property 5: Verify parent pointers are consistent
-        if (node->left) assert(node->left->parent == node);
-        if (node->right) assert(node->right->parent == node);
-
-        return left_black_height + (node->color == Color::Black ? 1 : 0);
-    }
-
-
     // Insert
     bool Insert(const K& key, const V& value) {
         // If root is NULL, we need to 
@@ -254,6 +216,39 @@ public:
 
         return std::nullopt;
     }
+
+protected:
+
+    friend class RedBlackTreeTest;
+
+    void Validate() {
+        if (!this->root) return;
+        assert(this->root->color == Color::Black);
+        assert(this->root->parent == nullptr);
+        ValidateNode(this->root);
+    }
+
+    int ValidateNode(Node<std::pair<K, V>>* node) {
+        if (!node) return 1;
+
+        // Property 3: Red node must not have red children
+        if (node->color == Color::Red) {
+            assert(!node->left || node->left->color == Color::Black);
+            assert(!node->right || node->right->color == Color::Black);
+        }
+
+        // Property 4: Both subtrees must have the same black height
+        int left_black_height = this->ValidateNode(node->left);
+        int right_black_height = this->ValidateNode(node->right);
+        assert(left_black_height == right_black_height);
+
+        // Property 5: Verify parent pointers are consistent
+        if (node->left) assert(node->left->parent == node);
+        if (node->right) assert(node->right->parent == node);
+
+        return left_black_height + (node->color == Color::Black ? 1 : 0);
+    }
+
 
 private:
 
