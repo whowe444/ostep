@@ -18,6 +18,33 @@ public:
         this->Clear(this->root);
     }
 
+    // Move Ctor
+    RedBlackTree(RedBlackTree&& other) noexcept
+        :
+            root(other.root),
+            size(other.size)
+    {
+        other.root = nullptr;
+        other.size = 0;
+    }
+
+    // Move Assignment
+    RedBlackTree& operator=(RedBlackTree&& other) noexcept {
+        // Self assignment guard
+        if (this == &other) return *this;
+
+        // Clear out this tree
+        this->Clear();
+
+        this->root = other.root;
+        this->size = other.size;
+
+        other.size = 0;
+        other.root = nullptr;
+
+        return *this;
+    }
+
     // GetSize
     int GetSize() {
         return this->size;

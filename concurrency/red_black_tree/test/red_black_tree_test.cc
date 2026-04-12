@@ -5,6 +5,34 @@ TEST_F(RedBlackTreeTest, TestConstructor) {
     
 }
 
+TEST_F(RedBlackTreeTest, TestMoveCtor) {
+    const int firstKey = 1;
+    const int secondKey = 2;
+    const int firstValue = 10;
+    const int secondValue = 20;
+    EXPECT_TRUE(tree->Insert(firstKey, firstValue));
+    EXPECT_TRUE(tree->Insert(secondKey, secondValue));
+
+    RedBlackTree<int, int> newTree {std::move(*this->tree)};
+
+    EXPECT_EQ(newTree.GetSize(), 2);
+    EXPECT_EQ(this->tree->GetSize(), 0);
+}
+
+TEST_F(RedBlackTreeTest, TestMoveAssignment) {
+    const int firstKey = 1;
+    const int secondKey = 2;
+    const int firstValue = 10;
+    const int secondValue = 20;
+    EXPECT_TRUE(tree->Insert(firstKey, firstValue));
+    EXPECT_TRUE(tree->Insert(secondKey, secondValue));
+
+    RedBlackTree<int, int> newTree = std::move(*this->tree);
+
+    EXPECT_EQ(newTree.GetSize(), 2);
+    EXPECT_EQ(this->tree->GetSize(), 0);
+}
+
 TEST_F(RedBlackTreeTest, TestSize) {
     EXPECT_EQ(tree->GetSize(), 0);
 }
