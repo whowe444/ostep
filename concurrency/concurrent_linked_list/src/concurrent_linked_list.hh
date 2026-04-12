@@ -26,10 +26,10 @@ public:
         // Snapshot other's values under its lock
         std::vector<int> values;
         {
-            std::unique_lock<std::mutex> other_lock(other.sentinel->mtx);
+            std::unique_lock<std::shared_mutex> other_lock(other.sentinel->mtx);
             Node<T>* ptr = other.sentinel->next;
             while (ptr) {
-                std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+                std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
                 values.push_back(ptr->value);
                 other_lock = std::move(curr_lock);
                 ptr = ptr->next;
@@ -50,10 +50,10 @@ public:
         // Snapshot other's values under its lock
         std::vector<int> values;
         {
-            std::unique_lock<std::mutex> other_lock(other.sentinel->mtx);
+            std::unique_lock<std::shared_mutex> other_lock(other.sentinel->mtx);
             Node<T>* ptr = other.sentinel->next;
             while (ptr) {
-                std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+                std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
                 values.push_back(ptr->value);
                 other_lock = std::move(curr_lock);
                 ptr = ptr->next;
@@ -109,13 +109,13 @@ public:
     // Add Function
     // Returns true upon success
     bool Add(int value) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<T>* prev = this->sentinel;
         Node<T>* ptr = prev->next;
 
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             prev_lock = std::move(curr_lock);
             prev = ptr;
             ptr = ptr->next;
@@ -128,12 +128,12 @@ public:
 
     // Value is Contained in the List.
     bool Contains(int value) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::shared_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<T>* prev = this->sentinel;
         Node<T>* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::shared_lock<std::shared_mutex> curr_lock(ptr->mtx);
         
             if (ptr->value == value) {
                 return true;
@@ -151,12 +151,12 @@ public:
     // Remove Value at index
     // Returns value removed
     bool Remove(int value) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<T>* prev = this->sentinel;
         Node<T>* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             if (ptr->value == value) {
                 // Delete this node
                 prev->next = ptr->next;
@@ -178,10 +178,10 @@ public:
     // empty.
     void Clear() {
         if (!sentinel) return;
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<T>* ptr = this->sentinel->next;
         while (ptr) {
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             auto temp = ptr->next;
             curr_lock.unlock();
             delete(ptr);

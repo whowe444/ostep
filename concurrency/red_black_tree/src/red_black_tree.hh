@@ -217,7 +217,7 @@ public:
         return std::nullopt;
     }
 
-protected:
+private:
 
     friend class RedBlackTreeTest;
 
@@ -248,9 +248,6 @@ protected:
 
         return left_black_height + (node->color == Color::Black ? 1 : 0);
     }
-
-
-private:
 
     void replaceWithSuccessorAndDeleteSuccessor(Node<std::pair<K, V>>* delete_node) {
         //first find the successor
