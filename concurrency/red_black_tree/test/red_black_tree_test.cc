@@ -5,6 +5,50 @@ TEST_F(RedBlackTreeTest, TestConstructor) {
     
 }
 
+TEST_F(RedBlackTreeTest, TestCopyCtor) {
+    const int firstKey = 1;
+    const int secondKey = 2;
+    const int firstValue = 10;
+    const int secondValue = 20;
+    EXPECT_TRUE(tree->Insert(firstKey, firstValue));
+    EXPECT_TRUE(tree->Insert(secondKey, secondValue));
+
+    RedBlackTree<int, int> newTree {*this->tree};
+
+    // Since we made a copy our two lists have the same size.
+    EXPECT_EQ(newTree.GetSize(), 2);
+    EXPECT_EQ(this->tree->GetSize(), 2); 
+
+    // Mutating newTree doesn't affect the original tree
+    newTree.Insert(3, 30);
+
+    // Verify
+    EXPECT_EQ(newTree.GetSize(), 3);
+    EXPECT_EQ(this->tree->GetSize(), 2);
+}
+TEST_F(RedBlackTreeTest, TestCopyAssignment) {
+    const int firstKey = 1;
+    const int secondKey = 2;
+    const int firstValue = 10;
+    const int secondValue = 20;
+    EXPECT_TRUE(tree->Insert(firstKey, firstValue));
+    EXPECT_TRUE(tree->Insert(secondKey, secondValue));
+
+    RedBlackTree<int, int> newTree = *this->tree;
+
+    // Since we made a copy our two lists have the same size.
+    EXPECT_EQ(newTree.GetSize(), 2);
+    EXPECT_EQ(this->tree->GetSize(), 2); 
+
+    // Mutating newTree doesn't affect the original tree
+    newTree.Insert(3, 30);
+
+    // Verify
+    EXPECT_EQ(newTree.GetSize(), 3);
+    EXPECT_EQ(this->tree->GetSize(), 2);
+}
+
+
 TEST_F(RedBlackTreeTest, TestMoveCtor) {
     const int firstKey = 1;
     const int secondKey = 2;

@@ -18,6 +18,37 @@ public:
         this->Clear(this->root);
     }
 
+    // Copy Ctor
+    RedBlackTree(const RedBlackTree& other) : RedBlackTree() {
+        Node<std::pair<K, V>>* ptr = other.root;
+        this->CopyHelper(ptr);
+    }
+
+    // Copy Assignment
+    RedBlackTree& operator=(const RedBlackTree& other) {
+        // Self assignment guard
+        if (this == &other) return *this;
+
+        // Clear out this tree
+        this->Clear();
+
+        // Now copy over the other tree
+        Node<std::pair<K, V>>* ptr = other.root;
+        this->CopyHelper(ptr);
+
+        return *this;
+    }
+
+    void CopyHelper(Node<std::pair<K, V>>* node) {
+        if (!node) return;
+
+        this->Insert(node->value.first, node->value.second);
+
+        // Now recurse for the left and right subtree
+        this->CopyHelper(node->left);
+        this->CopyHelper(node->right);
+    }
+
     // Move Ctor
     RedBlackTree(RedBlackTree&& other) noexcept
         :
