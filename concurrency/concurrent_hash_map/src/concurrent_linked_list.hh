@@ -26,10 +26,10 @@ public:
         // Snapshot other's values under its lock
         std::vector<std::pair<K, V>> values;
         {
-            std::unique_lock<std::mutex> other_lock(other.sentinel->mtx);
+            std::unique_lock<std::shared_mutex> other_lock(other.sentinel->mtx);
             Node<std::pair<K, V>>* ptr = other.sentinel->next;
             while (ptr) {
-                std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+                std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
                 values.push_back(ptr->value);
                 other_lock = std::move(curr_lock);
                 ptr = ptr->next;
@@ -50,10 +50,10 @@ public:
         // Snapshot other's values under its lock
         std::vector<std::pair<K, V>> values;
         {
-            std::unique_lock<std::mutex> other_lock(other.sentinel->mtx);
+            std::unique_lock<std::shared_mutex> other_lock(other.sentinel->mtx);
             Node<std::pair<K, V>>* ptr = other.sentinel->next;
             while (ptr) {
-                std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+                std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
                 values.push_back(ptr->value);
                 other_lock = std::move(curr_lock);
                 ptr = ptr->next;
@@ -109,13 +109,13 @@ public:
     // Add Function
     // Returns true upon success
     bool Add(const K& key, const V& value) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<std::pair<K, V>>* prev = this->sentinel;
         Node<std::pair<K, V>>* ptr = prev->next;
 
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             prev_lock = std::move(curr_lock);
 
             // Updating an existing key
@@ -135,12 +135,12 @@ public:
 
     // Value is Contained in the List.
     bool Contains(const K& key) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::shared_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<std::pair<K, V>>* prev = this->sentinel;
         Node<std::pair<K, V>>* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::shared_lock<std::shared_mutex> curr_lock(ptr->mtx);
         
             if (ptr->value.first == key) {
                 return true;
@@ -157,12 +157,12 @@ public:
 
     // Value stored at the Key.
     std::optional<V> Get(const K& key) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::shared_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<std::pair<K, V>>* prev = this->sentinel;
         Node<std::pair<K, V>>* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::shared_lock<std::shared_mutex> curr_lock(ptr->mtx);
         
             if (ptr->value.first == key) {
                 return ptr->value.second;
@@ -180,12 +180,12 @@ public:
     // Remove Value at index
     // Returns value removed
     bool Remove(const K& key) {
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<std::pair<K, V>>* prev = this->sentinel;
         Node<std::pair<K, V>>* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             if (ptr->value.first == key) {
                 // Delete this node
                 prev->next = ptr->next;
@@ -207,10 +207,10 @@ public:
     // empty.
     void Clear() {
         if (!sentinel) return;
-        std::unique_lock<std::mutex> prev_lock(this->sentinel->mtx);
+        std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<std::pair<K, V>>* ptr = this->sentinel->next;
         while (ptr) {
-            std::unique_lock<std::mutex> curr_lock(ptr->mtx);
+            std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             auto temp = ptr->next;
             curr_lock.unlock();
             delete(ptr);

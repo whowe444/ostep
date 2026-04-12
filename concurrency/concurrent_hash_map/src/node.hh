@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 
 template<typename T>
 class Node {
@@ -21,7 +21,6 @@ public:
 
     Node<T>* next;
     T value;
-    std::mutex mtx;
-
+    std::shared_mutex mtx;
 
 };
