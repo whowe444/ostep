@@ -2,6 +2,7 @@
 
 TEST_F(RedBlackTreeTest, TestConstructor) {
     EXPECT_TRUE(tree);
+    
 }
 
 TEST_F(RedBlackTreeTest, TestSize) {
@@ -63,7 +64,7 @@ TEST_F(RedBlackTreeTest, DeleteRootNodeTwoChildren) {
     EXPECT_EQ(tree->GetSize(), 3);
 
     EXPECT_EQ(tree->Delete(firstKey), firstValue);
-    EXPECT_EQ(tree->GetSize(), 2);
+    EXPECT_EQ(tree->GetSize(), 2);   
 }
 
 
@@ -214,6 +215,7 @@ TEST_F(RedBlackTreeTest, MultipleInsertionsBeforeDeleteThree) {
     EXPECT_TRUE(tree->Get(6).has_value());
 }
 
+
 TEST_F(RedBlackTreeTest, MultipleInsertionsBeforeDeleteRoot) {
     std::vector<std::pair<int, int>> pairs = {
         {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {6, 60}, {9, 90}
@@ -234,7 +236,7 @@ TEST_F(RedBlackTreeTest, MultipleInsertionsBeforeDeleteRoot) {
     EXPECT_TRUE(tree->Get(1).has_value());
     EXPECT_TRUE(tree->Get(4).has_value());
     EXPECT_TRUE(tree->Get(9).has_value());
-    EXPECT_TRUE(tree->Get(6).has_value());
+    EXPECT_TRUE(tree->Get(6).has_value());   
 }
 
 TEST_F(RedBlackTreeTest, MultipleInsertionsBeforeDeleteLeaf) {
@@ -333,4 +335,13 @@ TEST_F(RedBlackTreeTest, DeleteNodeWithOnlyLeftChild) {
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
     EXPECT_TRUE(tree->Get(2).has_value());
     EXPECT_FALSE(tree->Get(3).has_value());
+}
+
+TEST_F(RedBlackTreeTest, InsertManyElements) {
+    const int NUM_ELEMENTS = 10000;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        tree->Insert(i, i*10);
+    }
+
+    EXPECT_EQ(tree->GetSize(), NUM_ELEMENTS);
 }

@@ -36,6 +36,43 @@ public:
         this->size--;
     }
 
+    void Validate() {
+        if (!this->root) return;
+        assert(this->root->color == Color::Black);
+        assert(this->root->parent == nullptr);
+        ValidateNode(this->root);
+    }
+
+    int ValidateNode(Node<std::pair<K, V>>* node) {
+        if (!node) return 1;
+
+        // Property 3: Red node must not have red children
+        if (node->color == Color::Red) {
+            assert(!node->left || node->left->color == Color::Black);
+            assert(!node->right || node->right->color == Color::Black);
+        }
+
+        // Property 4: Both subtrees must have the same black height
+        int left_black_height = this->ValidateNode(node->left);
+        int right_black_height = this->ValidateNode(node->right);
+        if (left_black_height != right_black_height) {
+            std::cout << "Black height violation at node: " << node->value.first 
+                    << " left_bh=" << left_black_height 
+                    << " right_bh=" << right_black_height << std::endl;
+            std::cout << "Node color: " << (node->color == Color::Black ? "Black" : "Red") << std::endl;
+            if (node->left) std::cout << "Left child: " << node->left->value.first << std::endl;
+            if (node->right) std::cout << "Right child: " << node->right->value.first << std::endl;
+        }
+
+        assert(left_black_height == right_black_height);
+
+        // Property 5: Verify parent pointers are consistent
+        if (node->left) assert(node->left->parent == node);
+        if (node->right) assert(node->right->parent == node);
+
+        return left_black_height + (node->color == Color::Black ? 1 : 0);
+    }
+
 
     // Insert
     bool Insert(const K& key, const V& value) {
@@ -110,9 +147,7 @@ public:
         auto ptr = this->root;
         if (ptr->value.first == key) {
             // we have found the node to delete
-            auto return_value = ptr->value.second;
-            auto return_color = ptr->color;
-            
+            auto return_value = ptr->value.second;            
             if (!ptr->left) {
                 // replace root with the right child
                 this->root = ptr->right;
@@ -128,9 +163,10 @@ public:
             } else {
                 // replace with the successor when both children are present
                 this->replaceWithSuccessorAndDeleteSuccessor(ptr);
+                return return_value;
             }
 
-            // TODO: rebalancing
+            this->rebalanceDeletion(this->root, nullptr, Color::Black);
             return return_value;
         }
 
@@ -161,15 +197,12 @@ public:
                         } else {
                             // logic for the successor
                             this->replaceWithSuccessorAndDeleteSuccessor(delete_node);
+                            return return_value;
                         }
 
-                        if (return_color == Color::Red) {
-                            // no rebalancing needed
-                            return return_value;
-                        } else {
-                            // TODO: rebalancing
-                            return return_value;
-                        }
+                        // Pass in the replacement node (left in this case)
+                        this->rebalanceDeletion(ptr->left, ptr, return_color);
+                        return return_value;
 
                     } else {
                         ptr = ptr->left;
@@ -203,16 +236,11 @@ public:
                         } else {
                             // logic for the successor
                             this->replaceWithSuccessorAndDeleteSuccessor(delete_node);
-                        }
-
-                       if (return_color == Color::Red) {
-                            // no rebalancing needed
-                            return return_value;
-                        } else {
-                            // TODO: rebalancing
                             return return_value;
                         }
 
+                        // Pass in the replacement node (left in this case)
+                        this->rebalanceDeletion(ptr->right, ptr, return_color);
                         return return_value;
 
                     } else {
@@ -236,16 +264,120 @@ private:
 
         // found the successor
         delete_node->value = successor->value;
+        auto deleted_node_color = successor->color;
+
+        auto parent_node = successor->parent;
+        auto replacement_node = successor->right;
         if (successor != delete_node->right) {
-            successor->parent->left = successor->right;
+            // the right subtree had a left component
+            parent_node->left = replacement_node;
         } else {
-            delete_node->right = successor->right;
+            // the right subtree had no left children
+            parent_node->right = replacement_node;
+            
         }
 
-        if (successor->right) successor->right->parent = successor->parent;
+        if (replacement_node) replacement_node->parent = parent_node;
         
         delete successor;
         this->size--;
+        
+        // Now we need to call the rebalance function
+        this->rebalanceDeletion(replacement_node, parent_node, deleted_node_color);
+    }
+
+    /**
+     * Rebalance the RedBlackTree after a node has been deleted.
+     * 
+     * @param replacement_node a pointer to the replacement node of the node that was deleted
+     * @param deleted_node_color the color of the initial deleted node
+     */
+    void rebalanceDeletion(Node<std::pair<K, V>>* replacement_node, Node<std::pair<K, V>>* parent_node,
+            Color deleted_node_color) {
+        // There is no rebalancing to do
+        if (!parent_node) {
+            // If you are root, recolor yourself black and return
+            if (this->root) this->root->color = Color::Black;
+            return;
+        }
+
+        // If you deleted a red, there is no rebalancing
+        if (deleted_node_color == Color::Red) return;
+
+        // If you are a red node who replaced a black node simply color yourself 
+        // black to restore the proper number of black nodes in the chain
+        if (replacement_node && replacement_node->color == Color::Red) {
+            replacement_node->color = Color::Black;
+            return;
+        }
+
+        bool node_is_left = parent_node->left == replacement_node;
+        auto sibling = node_is_left ? parent_node->right : parent_node->left;
+
+        // If sibling is red, rotate parent towards double black and recolor, then re-evaluate
+        if (sibling && sibling->color == Color::Red) {
+            if (node_is_left) {
+                this->leftRotation(parent_node);
+            } else {
+                this->rightRotation(parent_node);
+            }
+            // recolor
+            parent_node->color = Color::Red;
+            sibling->color = Color::Black;
+
+            // re-evaluate
+            this->rebalanceDeletion(replacement_node, parent_node, deleted_node_color);
+        } else if (sibling && sibling->color == Color::Black) {
+            // sibling is black, check if the sibling's children are black
+            auto sibling_left_color = !sibling->left || sibling->left->color == Color::Black ? Color::Black : Color::Red;
+            auto sibling_right_color = !sibling->right || sibling->right->color == Color::Black ? Color::Black : Color::Red;
+            if (sibling_left_color == Color::Black && sibling_right_color == Color::Black) {
+                // Case 2, recolor sibling red and propagate up to parent
+                sibling->color = Color::Red;
+
+                // propagate up to parent, in order to do this, parent becomes our new replacement node
+                // and parent->parent becomes the new parent
+                this->rebalanceDeletion(parent_node, parent_node->parent, deleted_node_color);
+            } else {
+                // one of the sibling's children is red
+
+                auto near_child = node_is_left ? sibling->left : sibling->right;
+
+                // if the near one is red, rotate the sibling away from the double black, recolor
+                // and fall through to case 4
+                if (near_child && near_child->color == Color::Red) {
+                    if (node_is_left) {
+                        this->rightRotation(sibling);
+                    } else {
+                        this->leftRotation(sibling);
+                    }
+                    // recolor
+                    sibling->color = Color::Red;
+                    near_child->color = Color::Black;
+                    sibling = near_child;
+                }
+
+                auto far_child = node_is_left ? sibling->right : sibling->left;
+
+                /// if the far one is red, rotate the parent towards the double black, recolor
+                // and we are done
+                if (far_child && far_child->color == Color::Red) {
+                    auto parent_color = parent_node->color;
+                    if (node_is_left) {
+                        this->leftRotation(parent_node);
+                    } else {
+                        this->rightRotation(parent_node);
+                    }
+                    parent_node->color = Color::Black;
+                    sibling->color = parent_color;
+                    far_child->color = Color::Black;
+                    return;
+                }
+            }
+        } else {
+            // the sibling was null
+            this->rebalanceDeletion(parent_node, parent_node->parent, deleted_node_color);
+        }
     }
 
     void rebalanceInsertion(Node<std::pair<K, V>>* node) {

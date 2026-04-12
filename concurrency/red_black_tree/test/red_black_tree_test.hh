@@ -14,6 +14,8 @@ protected:
         tree = std::make_unique<RedBlackTree<int, int>>();
     }
 
-    void TearDown() override {}
+    void TearDown() override {
+        tree->Validate();
+    }
 
 };
