@@ -66,7 +66,10 @@ public:
                     // add new node
                     ptr->left = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
+
+                    this->rebalanceInsertion(ptr->left);
                     return true;
+
                 }
             } else {
                 if (ptr->right) {
@@ -76,6 +79,8 @@ public:
                     // add new node
                     ptr->right = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
+                    
+                    this->rebalanceInsertion(ptr->right);
                     return true;
                 }
             }
@@ -106,6 +111,7 @@ public:
         if (ptr->value.first == key) {
             // we have found the node to delete
             auto return_value = ptr->value.second;
+            auto return_color = ptr->color;
             
             if (!ptr->left) {
                 // replace root with the right child
@@ -113,20 +119,19 @@ public:
                 if (this->root) this->root->parent = nullptr;
                 delete ptr;
                 this->size--;
-                return return_value;
             } else if (!ptr->right) {
                 // replace root with left child
                 this->root = ptr->left;
                 if (this->root) this->root->parent = nullptr;
                 delete ptr;
                 this->size--;
-                return return_value;
             } else {
                 // replace with the successor when both children are present
                 this->replaceWithSuccessorAndDeleteSuccessor(ptr);
-                return return_value;
             }
 
+            // TODO: rebalancing
+            return return_value;
         }
 
         while (ptr) {
@@ -138,6 +143,7 @@ public:
 
                         auto delete_node = ptr->left;
                         auto return_value = delete_node->value.second;
+                        auto return_color = delete_node->color;
 
                         // now delete the node
                         if (!delete_node->left) {
@@ -146,19 +152,25 @@ public:
                             if (ptr->left) ptr->left->parent = ptr;
                             delete delete_node;
                             this->size--;
-                            return return_value;
                         } else if(!delete_node->right) {
                             // replace with left child
                             ptr->left = delete_node->left;
                             if (ptr->left) ptr->left->parent = ptr;
                             delete delete_node;
                             this->size--;
-                            return return_value;
                         } else {
                             // logic for the successor
                             this->replaceWithSuccessorAndDeleteSuccessor(delete_node);
+                        }
+
+                        if (return_color == Color::Red) {
+                            // no rebalancing needed
+                            return return_value;
+                        } else {
+                            // TODO: rebalancing
                             return return_value;
                         }
+
                     } else {
                         ptr = ptr->left;
                     }
@@ -173,6 +185,8 @@ public:
 
                         auto delete_node = ptr->right;
                         auto return_value = delete_node->value.second;
+                        auto return_color = delete_node->color;
+
                         // now delete the node
                         if (!delete_node->left) {
                             // replace with the right child
@@ -180,19 +194,27 @@ public:
                             if (ptr->right) ptr->right->parent = ptr;
                             delete delete_node;
                             this->size--;
-                            return return_value;
                         } else if(!delete_node->right) {
                             // replace with the left child
                             ptr->right = delete_node->left;
                             if (ptr->right) ptr->right->parent = ptr;
                             delete delete_node;
                             this->size--;
-                            return return_value;
                         } else {
                             // logic for the successor
                             this->replaceWithSuccessorAndDeleteSuccessor(delete_node);
+                        }
+
+                       if (return_color == Color::Red) {
+                            // no rebalancing needed
+                            return return_value;
+                        } else {
+                            // TODO: rebalancing
                             return return_value;
                         }
+
+                        return return_value;
+
                     } else {
                         ptr = ptr->right;
                     }
@@ -224,6 +246,72 @@ private:
         
         delete successor;
         this->size--;
+    }
+
+    void rebalanceInsertion(Node<std::pair<K, V>>* node) {
+        // Check if I am the root node
+        if (!node->parent) {
+            node->color = Color::Black;
+            return;
+        }
+    
+        // Base Case (ends the rebalancing)
+        if (node->parent->color == Color::Black) return;
+
+        auto parent = node->parent;
+        auto grandparent = parent->parent;
+        auto grandparent_left = grandparent->left;
+        auto grandparent_left_color = !grandparent_left || grandparent_left->color == Color::Black
+            ? Color::Black : Color::Red;
+        auto grandparent_right = grandparent->right;
+        auto grandparent_right_color = !grandparent_right || grandparent_right->color == Color::Black
+            ? Color::Black : Color::Red;
+        if (grandparent_left_color == Color::Red && grandparent_right_color == Color::Red) {
+            // Case 1: Parent and Uncle Red
+            // Recolor parent and uncle to black, grandparent to red, then recurse on the grandparent.
+            grandparent_left->color = Color::Black;
+            grandparent_right->color = Color::Black;
+            grandparent->color = Color::Red;
+            this->rebalanceInsertion(grandparent);
+        } else {
+            // Case 2: Parent Red, Uncle Black
+            bool parent_is_left = grandparent->left == node->parent;
+            bool node_is_left = node->parent->left == node;
+            bool is_triangle = parent_is_left != node_is_left;
+            
+            if (is_triangle) {
+                // perform a rotation on the parent to produce a line
+                if (parent_is_left) {
+                    // perform a left rotation
+                    this->leftRotation(node->parent);
+                } else {
+                    // perform a right rotation
+                    this->rightRotation(node->parent);
+                }
+            }
+
+            // perform a rotation on the grandparent and recolor
+            if (parent_is_left) {
+                // perform right rotation on grandparent
+                this->rightRotation(grandparent);
+            } else {
+                // perform left rotation on grandparent
+                this->leftRotation(grandparent);
+            }
+
+            // Recolor the grandparent to red, parent to black
+            grandparent->color = Color::Red;
+            parent->color = Color::Black;
+            return;
+        }
+    }
+
+    void leftRotation(Node<std::pair<K, V>>* node) {
+        // TODO: unimplemented
+    }
+
+    void rightRotation(Node<std::pair<K, V>>* node) {
+        // TODO: unimplemented
     }
 
 
