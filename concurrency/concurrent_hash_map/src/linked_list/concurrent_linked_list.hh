@@ -1,10 +1,8 @@
 #pragma once
 
-#include "node.hh"
+#include "./node.hh"
 #include <vector>
 #include <atomic>
-
-using namespace linked_list;
 
 template<typename K, typename V>
 class ConcurrentLinkedList {

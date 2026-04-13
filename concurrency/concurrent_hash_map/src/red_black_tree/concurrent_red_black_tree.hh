@@ -1,6 +1,6 @@
 #pragma once
 
-#include "node.hh"
+#include "./node.hh"
 #include <shared_mutex>
 #include <optional>
 
