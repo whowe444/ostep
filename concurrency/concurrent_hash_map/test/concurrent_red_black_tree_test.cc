@@ -17,7 +17,7 @@ TEST_F(ConcurrentRedBlackTreeTest, TestIsEmpty) {
 TEST_F(ConcurrentRedBlackTreeTest, TestInsertAtRoot) {
     const int key = 7;
     const int value = 8;
-    EXPECT_TRUE(tree->Insert(key, value));
+    EXPECT_TRUE(tree->Add(key, value));
     EXPECT_EQ(tree->GetSize(), 1);
     EXPECT_EQ(tree->Get(key).value(), value);
 }
@@ -27,8 +27,8 @@ TEST_F(ConcurrentRedBlackTreeTest, InsertTwoElements) {
     const int secondKey = 2;
     const int firstValue = 10;
     const int secondValue = 20;
-    EXPECT_TRUE(tree->Insert(firstKey, firstValue));
-    EXPECT_TRUE(tree->Insert(secondKey, secondValue));
+    EXPECT_TRUE(tree->Add(firstKey, firstValue));
+    EXPECT_TRUE(tree->Add(secondKey, secondValue));
     EXPECT_EQ(tree->GetSize(), 2);
 
     // Retrieve values
@@ -41,10 +41,10 @@ TEST_F(ConcurrentRedBlackTreeTest, UpdateValue) {
     const int firstValue = 10;
     const int secondValue = 20;
 
-    tree->Insert(firstKey, firstValue);
+    tree->Add(firstKey, firstValue);
     EXPECT_EQ(tree->Get(firstKey).value(), firstValue);
 
-    tree->Insert(firstKey, secondValue);
+    tree->Add(firstKey, secondValue);
     EXPECT_EQ(tree->Get(firstKey).value(), secondValue);
 }
 
@@ -58,13 +58,13 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteRootNodeTwoChildren) {
     const int thirdKey = 3;
     const int thirdValue = 30;
 
-    tree->Insert(firstKey, firstValue);
-    tree->Insert(secondKey, secondValue);
-    tree->Insert(thirdKey, thirdValue);
+    tree->Add(firstKey, firstValue);
+    tree->Add(secondKey, secondValue);
+    tree->Add(thirdKey, thirdValue);
 
     EXPECT_EQ(tree->GetSize(), 3);
 
-    EXPECT_EQ(tree->Delete(firstKey), firstValue);
+    EXPECT_EQ(tree->Remove(firstKey), firstValue);
     EXPECT_EQ(tree->GetSize(), 2);   
 }
 
@@ -79,13 +79,13 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteRootNodeTwoChildrenBalanced) {
     const int thirdKey = 3;
     const int thirdValue = 30;
 
-    tree->Insert(firstKey, firstValue);
-    tree->Insert(secondKey, secondValue);
-    tree->Insert(thirdKey, thirdValue);
+    tree->Add(firstKey, firstValue);
+    tree->Add(secondKey, secondValue);
+    tree->Add(thirdKey, thirdValue);
 
     EXPECT_EQ(tree->GetSize(), 3);
 
-    EXPECT_EQ(tree->Delete(firstKey), firstValue);
+    EXPECT_EQ(tree->Remove(firstKey), firstValue);
     EXPECT_EQ(tree->GetSize(), 2);
 }
 
@@ -96,10 +96,10 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteRootNodeOneChild) {
     const int secondKey = 2;
     const int secondValue = 20;
 
-    tree->Insert(firstKey, firstValue);
-    tree->Insert(secondKey, secondValue);
+    tree->Add(firstKey, firstValue);
+    tree->Add(secondKey, secondValue);
 
-    EXPECT_EQ(tree->Delete(firstKey), firstValue);
+    EXPECT_EQ(tree->Remove(firstKey), firstValue);
     EXPECT_EQ(tree->GetSize(), 1);
 }
 
@@ -107,14 +107,14 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteRootNodeNoChildren) {
     const int firstKey = 1;
     const int firstValue = 10;
 
-    tree->Insert(firstKey, firstValue);
+    tree->Add(firstKey, firstValue);
 
-    EXPECT_EQ(tree->Delete(firstKey), firstValue);
+    EXPECT_EQ(tree->Remove(firstKey), firstValue);
     EXPECT_EQ(tree->GetSize(), 0);
 }
 
 TEST_F(ConcurrentRedBlackTreeTest, DeleteNonExistingWhenEmpty) {
-    EXPECT_FALSE(tree->Delete(67).has_value());
+    EXPECT_FALSE(tree->Remove(67).has_value());
 }
 
 TEST_F(ConcurrentRedBlackTreeTest, DeleteNonExisting) {
@@ -127,11 +127,11 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteNonExisting) {
     const int thirdKey = 3;
     const int thirdValue = 30;
 
-    tree->Insert(firstKey, firstValue);
-    tree->Insert(secondKey, secondValue);
-    tree->Insert(thirdKey, thirdValue);
+    tree->Add(firstKey, firstValue);
+    tree->Add(secondKey, secondValue);
+    tree->Add(thirdKey, thirdValue);
 
-    EXPECT_FALSE(tree->Delete(67).has_value());
+    EXPECT_FALSE(tree->Remove(67).has_value());
 }
 
 TEST_F(ConcurrentRedBlackTreeTest, DeleteLeft) {
@@ -144,11 +144,11 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteLeft) {
     const int thirdKey = 3;
     const int thirdValue = 30;
 
-    tree->Insert(firstKey, firstValue);
-    tree->Insert(secondKey, secondValue);
-    tree->Insert(thirdKey, thirdValue);
+    tree->Add(firstKey, firstValue);
+    tree->Add(secondKey, secondValue);
+    tree->Add(thirdKey, thirdValue);
 
-    EXPECT_EQ(tree->Delete(secondKey).value(), secondValue);
+    EXPECT_EQ(tree->Remove(secondKey).value(), secondValue);
     EXPECT_EQ(tree->GetSize(), 2);
 }
 
@@ -162,11 +162,11 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteRight) {
     const int thirdKey = 3;
     const int thirdValue = 30;
 
-    tree->Insert(firstKey, firstValue);
-    tree->Insert(secondKey, secondValue);
-    tree->Insert(thirdKey, thirdValue);
+    tree->Add(firstKey, firstValue);
+    tree->Add(secondKey, secondValue);
+    tree->Add(thirdKey, thirdValue);
 
-    EXPECT_EQ(tree->Delete(thirdKey).value(), thirdValue);
+    EXPECT_EQ(tree->Remove(thirdKey).value(), thirdValue);
     EXPECT_EQ(tree->GetSize(), 2);
 }
 
@@ -176,12 +176,12 @@ TEST_F(ConcurrentRedBlackTreeTest, MultipleInsertionsBeforeDeleteSeven) {
     };
 
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
 
     EXPECT_EQ(tree->GetSize(), pairs.size());
 
-    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->Remove(7).value(), 70);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     EXPECT_TRUE(tree->Get(5).has_value());
@@ -199,12 +199,12 @@ TEST_F(ConcurrentRedBlackTreeTest, MultipleInsertionsBeforeDeleteThree) {
     };
 
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
 
     EXPECT_EQ(tree->GetSize(), pairs.size());
 
-    EXPECT_EQ(tree->Delete(3).value(), 30);
+    EXPECT_EQ(tree->Remove(3).value(), 30);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     EXPECT_TRUE(tree->Get(5).has_value());
@@ -223,12 +223,12 @@ TEST_F(ConcurrentRedBlackTreeTest, MultipleInsertionsBeforeDeleteRoot) {
     };
 
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
 
     EXPECT_EQ(tree->GetSize(), pairs.size());
 
-    EXPECT_EQ(tree->Delete(5).value(), 50);
+    EXPECT_EQ(tree->Remove(5).value(), 50);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     EXPECT_FALSE(tree->Get(5).has_value());
@@ -246,12 +246,12 @@ TEST_F(ConcurrentRedBlackTreeTest, MultipleInsertionsBeforeDeleteLeaf) {
     };
 
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
 
     EXPECT_EQ(tree->GetSize(), pairs.size());
 
-    EXPECT_EQ(tree->Delete(6).value(), 60);
+    EXPECT_EQ(tree->Remove(6).value(), 60);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     // Verify other nodes are still present
@@ -269,10 +269,10 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteWhereSuccessorIsRightChildsLeftDescenda
         {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {8, 80}
     };
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
     EXPECT_EQ(tree->GetSize(), pairs.size());
-    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->Remove(7).value(), 70);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     EXPECT_TRUE(tree->Get(5).has_value());
@@ -289,10 +289,10 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteWhereSuccessorIsRightChildsRightDescend
         {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
     };
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
     EXPECT_EQ(tree->GetSize(), pairs.size());
-    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->Remove(7).value(), 70);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     EXPECT_TRUE(tree->Get(5).has_value());
@@ -309,10 +309,10 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteWhereSuccessorIsRightChildsLeftDescenda
         {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {10, 100}, {8, 80}, {9, 90}
     };
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
     EXPECT_EQ(tree->GetSize(), pairs.size());
-    EXPECT_EQ(tree->Delete(7).value(), 70);
+    EXPECT_EQ(tree->Remove(7).value(), 70);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
 
     EXPECT_TRUE(tree->Get(5).has_value());
@@ -330,9 +330,9 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteNodeWithOnlyLeftChild) {
         {5, 50}, {3, 30}, {7, 70}, {2, 20}
     };
     for (auto [first, second] : pairs) {
-        tree->Insert(first, second);
+        tree->Add(first, second);
     }
-    EXPECT_EQ(tree->Delete(3).value(), 30);
+    EXPECT_EQ(tree->Remove(3).value(), 30);
     EXPECT_EQ(tree->GetSize(), pairs.size() - 1);
     EXPECT_TRUE(tree->Get(2).has_value());
     EXPECT_FALSE(tree->Get(3).has_value());
@@ -341,7 +341,7 @@ TEST_F(ConcurrentRedBlackTreeTest, DeleteNodeWithOnlyLeftChild) {
 TEST_F(ConcurrentRedBlackTreeTest, InsertManyElements) {
     const int NUM_ELEMENTS = 10000;
     for (int i = 0; i < NUM_ELEMENTS; i++) {
-        tree->Insert(i, i*10);
+        tree->Add(i, i*10);
     }
 
     EXPECT_EQ(tree->GetSize(), NUM_ELEMENTS);
@@ -354,7 +354,7 @@ TEST_F(ConcurrentRedBlackTreeTest, ConcurrentAdd) {
     for (int i = 0; i < NUM_THREADS; i++) {
         threads.emplace_back([this, i]() {
             for (int j = 0; j < NUM_ELEMENTS; j++) {
-                this->tree->Insert(i * NUM_ELEMENTS + j, 0);
+                this->tree->Add(i * NUM_ELEMENTS + j, 0);
             }
         });
     }
@@ -366,11 +366,11 @@ TEST_F(ConcurrentRedBlackTreeTest, ConcurrentDelete) {
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> threads;
 
-    for (int i = 0; i < NUM_ELEMENTS; i++) this->tree->Insert(i, 0);
+    for (int i = 0; i < NUM_ELEMENTS; i++) this->tree->Add(i, 0);
 
     for (int i = 0; i < NUM_ELEMENTS; i++) {
         threads.emplace_back([this, i]() {
-            this->tree->Delete(i);
+            this->tree->Remove(i);
         });
     }
 
@@ -388,13 +388,13 @@ TEST_F(ConcurrentRedBlackTreeTest, ConcurrentAddAndDelete) {
 
     for (int i = 0; i < NUM_ELEMENTS; i++) {
         adders.emplace_back([this, i]() {
-            this->tree->Insert(i, 0);
+            this->tree->Add(i, 0);
         });
     }
 
     for (int i = 0; i < NUM_ELEMENTS; i++) {
         removers.emplace_back([this, i]() {
-            this->tree->Delete(i);
+            this->tree->Remove(i);
         });
     }
 
@@ -408,7 +408,7 @@ TEST_F(ConcurrentRedBlackTreeTest, ConcurrentContains) {
     std::vector<std::thread> contains;
 
     // Add elements
-    for (int i = 0; i < NUM_ELEMENTS; i++) tree->Insert(i, 0);
+    for (int i = 0; i < NUM_ELEMENTS; i++) tree->Add(i, 0);
 
     // Add contains threads
     for (int i = 0; i < NUM_ELEMENTS; i++) {
@@ -424,7 +424,7 @@ TEST_F(ConcurrentRedBlackTreeTest, BenchmarkAdd) {
     auto start = std::chrono::high_resolution_clock::now();
     const int NUM_ELEMENTS = 100000;
     for (int i = 0; i < NUM_ELEMENTS; i++) {
-        this->tree->Insert(i, 0);
+        this->tree->Add(i, 0);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::nanoseconds duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);

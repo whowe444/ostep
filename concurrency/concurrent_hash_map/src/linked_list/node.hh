@@ -3,6 +3,8 @@
 #include <memory>
 #include <shared_mutex>
 
+namespace linked_list {
+
 template<typename T>
 class Node {
 
@@ -36,3 +38,5 @@ public:
     std::shared_mutex mtx;
 
 };
+
+} // namespace linked_list

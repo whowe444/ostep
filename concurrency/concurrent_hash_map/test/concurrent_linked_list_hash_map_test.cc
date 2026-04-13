@@ -1,19 +1,19 @@
-#include "concurrent_hash_map_test.hh"
+#include "concurrent_linked_list_hash_map_test.hh"
 #include <thread>
 
-TEST_F(ConcurrentHashMapTest, TestsConstructor) {
+TEST_F(ConcurrentLinkedListHashMapTest, TestsConstructor) {
     EXPECT_TRUE(map);
 }
 
-TEST_F(ConcurrentHashMapTest, GetSizeEmpty) {
+TEST_F(ConcurrentLinkedListHashMapTest, GetSizeEmpty) {
     EXPECT_EQ(map->GetSize(), 0);
 }
 
-TEST_F(ConcurrentHashMapTest, IsEmpty) {
+TEST_F(ConcurrentLinkedListHashMapTest, IsEmpty) {
     EXPECT_TRUE(map->IsEmpty());
 }
 
-TEST_F(ConcurrentHashMapTest, InsertOne) {
+TEST_F(ConcurrentLinkedListHashMapTest, InsertOne) {
     const int KEY = 1;
     const int VALUE = 10;
     EXPECT_TRUE(this->map->Insert(KEY, VALUE));
@@ -21,7 +21,7 @@ TEST_F(ConcurrentHashMapTest, InsertOne) {
     EXPECT_EQ(this->map->Get(KEY).value(), VALUE);
 }
 
-TEST_F(ConcurrentHashMapTest, UpdateValue) {
+TEST_F(ConcurrentLinkedListHashMapTest, UpdateValue) {
     const int key = 2;
     const int first_value = 11;
     const int second_value = 12;
@@ -31,7 +31,7 @@ TEST_F(ConcurrentHashMapTest, UpdateValue) {
     EXPECT_EQ(this->map->Get(key).value(), second_value);
 }
 
-TEST_F(ConcurrentHashMapTest, BenchmarkInsert) {
+TEST_F(ConcurrentLinkedListHashMapTest, BenchmarkInsert) {
     auto start = std::chrono::high_resolution_clock::now();
     const int NUM_ELEMENTS = 100000;
     for (int i = 0; i < NUM_ELEMENTS; i++) {
@@ -44,7 +44,7 @@ TEST_F(ConcurrentHashMapTest, BenchmarkInsert) {
         << " milliseconds per Add operation." << std::endl;
 }
 
-TEST_F(ConcurrentHashMapTest, ConcurrentAdd) {
+TEST_F(ConcurrentLinkedListHashMapTest, ConcurrentAdd) {
     const int NUM_THREADS = 10;
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> threads;
@@ -59,7 +59,7 @@ TEST_F(ConcurrentHashMapTest, ConcurrentAdd) {
     EXPECT_EQ(map->GetSize(), NUM_THREADS * NUM_ELEMENTS);
 }
 
-TEST_F(ConcurrentHashMapTest, ConcurrentDelete) {
+TEST_F(ConcurrentLinkedListHashMapTest, ConcurrentDelete) {
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> threads;
 
@@ -78,7 +78,7 @@ TEST_F(ConcurrentHashMapTest, ConcurrentDelete) {
     EXPECT_EQ(map->GetSize(), 0);
 }
 
-TEST_F(ConcurrentHashMapTest, ConcurrentAddAndDelete) {
+TEST_F(ConcurrentLinkedListHashMapTest, ConcurrentAddAndDelete) {
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> adders;
     std::vector<std::thread> removers;
@@ -99,7 +99,7 @@ TEST_F(ConcurrentHashMapTest, ConcurrentAddAndDelete) {
     for (auto& remover : removers) remover.join();
 }
 
-TEST_F(ConcurrentHashMapTest, ConcurrentContains) {
+TEST_F(ConcurrentLinkedListHashMapTest, ConcurrentContains) {
     const int NUM_ELEMENTS = 100;
     std::vector<std::thread> contains;
 
@@ -116,7 +116,7 @@ TEST_F(ConcurrentHashMapTest, ConcurrentContains) {
     for (auto& contain : contains) contain.join();
 }
 
-TEST_F(ConcurrentHashMapTest, BenchmarkConcurrentInsert) {
+TEST_F(ConcurrentLinkedListHashMapTest, BenchmarkConcurrentInsert) {
     const int NUM_ELEMENTS = 100000;
     const int NUM_THREADS = 10;
     const int NUM_PER_THREAD = NUM_ELEMENTS / NUM_THREADS;

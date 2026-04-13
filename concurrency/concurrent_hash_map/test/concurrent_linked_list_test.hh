@@ -1,7 +1,7 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include "concurrent_linked_list.hh"
+#include "linked_list/concurrent_linked_list.hh"
 
 class ConcurrentLinkedListTest : public ::testing::Test {
 

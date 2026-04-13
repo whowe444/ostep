@@ -1,8 +1,8 @@
 #pragma once
 
-#include "concurrent_linked_list.hh"
+#include "linked_list/concurrent_linked_list.hh"
 
-template<typename K, typename V>
+template<typename K, typename V, template<typename X, typename Z> class C>
 class ConcurrentHashMap {
 
 public:
@@ -75,6 +75,6 @@ private:
 
     std::atomic<int> size;
     static constexpr int NUM_BUCKETS = 10000;
-    ConcurrentLinkedList<K, V> buckets[NUM_BUCKETS];
+    C<K, V> buckets[NUM_BUCKETS];
 
 };
