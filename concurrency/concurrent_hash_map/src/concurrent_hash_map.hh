@@ -10,6 +10,18 @@ public:
     // Constructor
     ConcurrentHashMap() = default;
 
+    // Copy Ctor
+    ConcurrentHashMap(const ConcurrentHashMap& other) = delete;
+
+    // Copy Assignment
+    ConcurrentHashMap& operator=(const ConcurrentHashMap& other) = delete;
+
+    // Move Ctor
+    ConcurrentHashMap(ConcurrentHashMap&& other) = delete;
+
+    // Move Assignment
+    ConcurrentHashMap& operator=(ConcurrentHashMap&& other) = delete;
+
     // GetSize
     size_t GetSize() {
         return this->size.load();

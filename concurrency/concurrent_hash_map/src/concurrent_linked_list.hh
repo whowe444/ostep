@@ -22,79 +22,16 @@ public:
     }
 
     // Copy Ctor
-    ConcurrentLinkedList(const ConcurrentLinkedList& other) : ConcurrentLinkedList() {
-        // Snapshot other's values under its lock
-        std::vector<std::pair<K, V>> values;
-        {
-            std::unique_lock<std::shared_mutex> other_lock(other.sentinel->mtx);
-            Node<std::pair<K, V>>* ptr = other.sentinel->next;
-            while (ptr) {
-                std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
-                values.push_back(ptr->value);
-                other_lock = std::move(curr_lock);
-                ptr = ptr->next;
-            }
-        }
-        // Now add without holding any of other's locks
-        for (auto value : values) this->Add(value.first, value.second);
-    }
+    ConcurrentLinkedList(const ConcurrentLinkedList& other) = delete;
 
     // Copy Assignment
-    ConcurrentLinkedList& operator=(const ConcurrentLinkedList& other) {
-        // Self assignment guard
-        if (this == &other) return *this;
-
-        // Clear out all nodes and set size to 0.
-        this->Clear();
-
-        // Snapshot other's values under its lock
-        std::vector<std::pair<K, V>> values;
-        {
-            std::unique_lock<std::shared_mutex> other_lock(other.sentinel->mtx);
-            Node<std::pair<K, V>>* ptr = other.sentinel->next;
-            while (ptr) {
-                std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
-                values.push_back(ptr->value);
-                other_lock = std::move(curr_lock);
-                ptr = ptr->next;
-            }
-        }
-        // Now add without holding any of other's locks
-        for (auto value : values) this->Add(value.first, value.second);
-
-        return *this;
-    }
+    ConcurrentLinkedList& operator=(const ConcurrentLinkedList& other) = delete;
 
     // Move Ctor
-    ConcurrentLinkedList(ConcurrentLinkedList&& other) noexcept
-        :
-            sentinel(other.sentinel),
-            size(other.size.load())
-    {
-        other.sentinel = nullptr;
-        other.size = 0;
-    }
+    ConcurrentLinkedList(ConcurrentLinkedList&& other) = delete;
 
     // Move Assignemnt
-    ConcurrentLinkedList& operator=(ConcurrentLinkedList&& other) noexcept {
-        // Self assignment guard
-        if (this == &other) return *this;
-
-        // Clear out this list
-        this->Clear();
-
-        // Delete old sentinel
-        delete(this->sentinel);
-
-        this->sentinel = other.sentinel;
-        this->size = other.size.load();
-
-        // Null out other's sentinel
-        other.sentinel = nullptr;
-        other.size = 0;
-
-        return *this;
-    }
+    ConcurrentLinkedList& operator=(ConcurrentLinkedList&& other) = delete;
 
     // GetSize
     size_t GetSize() {
