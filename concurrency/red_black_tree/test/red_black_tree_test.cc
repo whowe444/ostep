@@ -417,3 +417,26 @@ TEST_F(RedBlackTreeTest, InsertManyElements) {
 
     EXPECT_EQ(tree->GetSize(), NUM_ELEMENTS);
 }
+
+TEST_F(RedBlackTreeTest, TestIterator) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
+    };
+
+    // Insert elements into the tree
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+
+    // Now iterate through the tree
+    int expectedKey = std::numeric_limits<int>::min();
+    for (const auto& [key, value] : *tree) {
+        // Verify that the keys are monotonically increasing.
+        EXPECT_TRUE(key > expectedKey);
+        expectedKey = key;
+
+        // Verify the key / value pair.
+        EXPECT_EQ(key*10, value);
+    }
+
+}

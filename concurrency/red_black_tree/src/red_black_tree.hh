@@ -7,6 +7,114 @@ class RedBlackTree {
 
 public:
 
+    struct Iterator {
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = std::pair<K, V>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::pair<K, V>*;
+        using reference = std::pair<K, V>&;
+
+    public:
+
+        // Constructor
+        Iterator(Node<std::pair<K, V>>* current, Node<std::pair<K, V>>* root) 
+            :
+                current(current),
+                root(root)
+        {
+        }
+
+        // Define the dereference operator.
+        reference operator*() const { return current->value; }
+
+        // Define the pointer access operator.
+        pointer operator->() const { return &(current->value); }
+
+        // Define the pre-increment operator.
+        Iterator& operator++() {
+            current = this->successor(current);
+            return *this;
+        }
+
+        // Define the post-increment operator.
+        Iterator operator++(int) {
+            // Grab a copy of the current iterator.
+            Iterator tmp = *this;
+
+            // Dereference current iter and pre-increment it.
+            ++(*this);
+
+            // Return the iter before pre-incrementing.
+            return tmp;
+        }
+
+        // Define the pre-decrement operator.
+        Iterator& operator--() {
+            current = this->predecessor(current);
+            return *this;
+        }
+
+        // Define the post-decrement oeprator.
+        Iterator operator--(int) {
+            // Grab a copy of the current iterator.
+            Iterator tmp = *this;
+
+            // Pre-decrement the current iter.
+            --(*this);
+
+            // Return the iter before pre-decrementing.
+            return tmp;
+        }
+
+        // Define the equals operator.
+        bool operator==(const Iterator& other) const { return current == other.current; }
+
+        // Define the not equals operator.
+        bool operator!=(const Iterator& other) const { return current != other.current; }
+
+    private:
+
+        // Helper function to find the successor of a node.
+        Node<std::pair<K, V>>* successor(Node<std::pair<K, V>>* node) {
+            auto ptr = node;
+            if (ptr->right) { return leftmost(ptr->right); }
+
+            // The right child doesn't exist, so we'll need 
+            // to go up the tree until we "come up" from the 
+            // left child. This implies that the parent of 
+            // that left child node is its successor since, 
+            // the left child is strictly smaller than its parent.
+            auto parent = ptr->parent;
+            while (parent != nullptr && parent->right == ptr) {
+                ptr = parent;
+                parent = parent->parent;
+            }
+            return parent;
+        }
+
+        // Helper function to find the predecessor of a node.
+        Node<std::pair<K, V>>* predecessor(Node<std::pair<K, V>>* node) {
+            auto ptr = node;
+            if (ptr->left) { return right(ptr->left); }
+
+            // The left child doesn't exist so we'll need to go up
+            // the tree until we "come up" from the right child. This
+            // implies that the parent of that right child is its
+            // predecessor since the right child is strictly greater than
+            // its parent.
+            auto parent = ptr->parent;
+            while (parent != nullptr && parent->left == ptr) {
+                ptr = parent;
+                parent = parent->parent;
+            }
+            return parent;
+
+        }
+
+        Node<std::pair<K, V>>* current;
+        Node<std::pair<K, V>>* root;
+    };
+
     // Constructor
     RedBlackTree() {
         root = nullptr;
@@ -74,6 +182,17 @@ public:
         other.root = nullptr;
 
         return *this;
+    }
+
+    // Iterator Begin Function
+    Iterator begin() {
+        if (!root) return end();
+        return Iterator(this->leftmost(root), root);
+    }
+
+    // Iterator End Function
+    Iterator end() {
+        return Iterator(nullptr, root);
     }
 
     // GetSize
@@ -552,6 +671,23 @@ private:
             }
         }
     }
+
+    // Helper function to find the leftmost node of the tree.
+    static Node<std::pair<K, V>>* leftmost(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        while (ptr->left != nullptr) ptr = ptr->left;
+        return ptr;
+    }
+
+    // Helper function to find the rightmost node of the tree.
+    static Node<std::pair<K, V>>* rightmost(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        while (ptr->right != nullptr) ptr = ptr->right;
+        return ptr;
+    }
+
+    // Give the Iterator access to the leftmost and rightmost helper functions.
+    friend struct Iterator;
 
     Node<std::pair<K, V>>* root;
     size_t size;
