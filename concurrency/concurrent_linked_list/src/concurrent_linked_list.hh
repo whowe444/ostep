@@ -12,7 +12,7 @@ public:
     // IteratorTemplate Class Definition.
     template<bool IsConst>
     struct IteratorTemplate {
-        using iterator_category = std::bidirectional_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using value_type = T;
         using difference_type = std::ptrdiff_t;
         using pointer = std::conditional_t<IsConst, const T*, T*>;
@@ -45,13 +45,21 @@ public:
         // Define the pre-increment operator.
         IteratorTemplate<IsConst>& operator++() {
             assert(current && "Incrementing end() iterator is undefined behavior.");
-            current = current->next;
-            if (current) lock = std::move(lock_type(current->mtx));
+            auto ptr = current->next;
+            if (ptr) {
+                // First acquire the lock
+                lock_type next_lock(ptr->mtx);
+                lock = std::move(next_lock);
+            } else {
+                lock = lock_type(); // Release current lock if we're moving to end()
+                current = nullptr;
+            }
+            current = ptr;
             return *this;
         }
 
         // Define the post-increment operator.
-        IteratorTemplate<IsConst> operator++(int) {
+        IteratorTemplate<IsConst> operator++(int) requires IsConst {
             auto tmp = *this;
 
             // Now pre-increment the current pointer.

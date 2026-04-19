@@ -88,7 +88,7 @@ public:
         }
 
         // Define the post-increment operator.
-        IteratorTemplate<IsConst> operator++(int) {
+        IteratorTemplate<IsConst> operator++(int) requires IsConst{
             // Grab a copy of the current iterator.
             auto tmp = *this;
 
