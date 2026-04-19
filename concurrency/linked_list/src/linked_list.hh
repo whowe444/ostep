@@ -166,12 +166,12 @@ public:
     }
 
     // GetSize
-    size_t GetSize() {
+    size_t GetSize() const {
         return this->size;
     }
 
     // IsEmpty
-    bool IsEmpty() {
+    bool IsEmpty() const {
         return this->GetSize() == 0;
     }
 
@@ -185,7 +185,7 @@ public:
     }
 
     // Get Value at index
-    int Get(int index) {
+    int Get(int index) const {
         // If the list is empty throw an exception
         const int n = this->GetSize();
         if (n == 0) throw std::runtime_error("Unable to retrieve from empty list!");

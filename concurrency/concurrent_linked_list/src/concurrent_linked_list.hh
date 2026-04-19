@@ -9,6 +9,96 @@ class ConcurrentLinkedList {
 
 public:
 
+    // IteratorTemplate Class Definition.
+    template<bool IsConst>
+    struct IteratorTemplate {
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<IsConst, const T*, T*>;
+        using reference = std::conditional_t<IsConst, const T&, T&>;
+
+        using lock_type = std::conditional_t<IsConst, std::shared_lock<std::shared_mutex>,
+            std::unique_lock<std::shared_mutex>>;
+    public:
+    
+        // Constructor
+        IteratorTemplate(Node<T>* node) 
+            : 
+                current(node),
+                lock(current ? lock_type(current->mtx) : lock_type())
+        {
+        }
+
+        // Define the dereference operator.
+        reference operator*() const { 
+            assert(current && "Dereferencing end() iterator is undefined behavior.");
+            return current->value;
+        }
+
+        // Define the pointer access operator.
+        pointer operator->() const { 
+            assert(current && "Dereferencing end() iterator is undefined behavior.");
+            return &(current->value);
+        }
+
+        // Define the pre-increment operator.
+        IteratorTemplate<IsConst>& operator++() {
+            assert(current && "Incrementing end() iterator is undefined behavior.");
+            current = current->next;
+            if (current) lock = std::move(lock_type(current->mtx));
+            return *this;
+        }
+
+        // Define the post-increment operator.
+        IteratorTemplate<IsConst> operator++(int) {
+            auto tmp = *this;
+
+            // Now pre-increment the current pointer.
+            ++(*this);
+
+            // Now return the temporary.
+            return tmp;
+        }
+
+        // Define the equals operator.
+        bool operator==(const IteratorTemplate<IsConst>& other) const {
+            return this->current == other.current;
+        }
+
+        // Define the not-equals operator.
+        bool operator!=(const IteratorTemplate<IsConst>& other) const {
+            return !(*this == other);
+        }
+
+    private:
+        Node<T>* current;
+        lock_type lock;
+    };
+
+    using Iterator = IteratorTemplate<false>;
+    using ConstIterator = IteratorTemplate<true>;
+
+    // Define the begin function.
+    Iterator begin() {
+        return Iterator(this->sentinel->next);
+    }
+
+    // Define the end function.
+    Iterator end() {
+        return Iterator(nullptr);
+    }
+
+    // Define the cbegin function.
+    ConstIterator cbegin() const {
+        return ConstIterator(this->sentinel->next);
+    }
+
+    // Define the cend function.
+    ConstIterator cend() const {
+        return ConstIterator(nullptr);
+    }
+
     // Constructor 
     ConcurrentLinkedList() {
         sentinel = new Node<T>();
@@ -34,12 +124,12 @@ public:
     ConcurrentLinkedList& operator=(ConcurrentLinkedList&& other) = delete;
 
     // GetSize
-    size_t GetSize() {
+    size_t GetSize() const{
         return this->size.load();
     }
 
     // IsEmpty
-    bool IsEmpty() {
+    bool IsEmpty() const {
         return this->GetSize() == 0;
     }
 
@@ -64,7 +154,7 @@ public:
     }
 
     // Value is Contained in the List.
-    bool Contains(int value) {
+    bool Contains(int value) const {
         std::shared_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
         Node<T>* prev = this->sentinel;
         Node<T>* ptr = prev->next;
