@@ -79,6 +79,34 @@ public:
     using Iterator = IteratorTemplate<false>;
     using ConstIterator = IteratorTemplate<true>;
 
+    // Read-only range — shared lock, multiple threads can hold this concurrently
+    class SharedRange {
+        const ConcurrentLinkedList<T>* listPointer;
+    public:
+        SharedRange(const ConcurrentLinkedList<T>* listPointer_)
+            : listPointer(listPointer_) {}
+
+        ConstIterator begin() { return listPointer->cbegin(); }
+        ConstIterator end()   { return listPointer->cend();   }
+    };
+
+    // Mutating range — unique lock, exclusive access
+    class UniqueRange {
+        ConcurrentLinkedList<T>* listPointer;
+    public:
+        UniqueRange(ConcurrentLinkedList<T>* listPointer_)
+            : listPointer(listPointer_) {}
+
+        Iterator begin() { return listPointer->begin(); }
+        Iterator end()   { return listPointer->end();   }
+    };
+
+    // Return the SharedRange (read-only)
+    SharedRange GetSharedRange() const { return SharedRange(this); }
+
+    // Return the UniqueRange (mutating)
+    UniqueRange GetUniqueRange() { return UniqueRange(this); }
+
     // Define the begin function.
     Iterator begin() {
         return Iterator(this->sentinel->next);
@@ -124,7 +152,7 @@ public:
     ConcurrentLinkedList& operator=(ConcurrentLinkedList&& other) = delete;
 
     // GetSize
-    size_t GetSize() const{
+    size_t GetSize() const {
         return this->size.load();
     }
 

@@ -167,3 +167,35 @@ TEST_F(ConcurrentLinkedListTest, BenchmarkAdd) {
     std::cout << "BenchmarkAdd took: " << std::to_string(duration.count() / (double)NUM_ELEMENTS)
         << " milliseconds per Add operation." << std::endl;
 }
+
+TEST_F(ConcurrentLinkedListTest, TestWriteIterator) {
+    const int NUM_ELEMENTS = 100;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Add(i, 0);
+    }
+
+    int expected_value = 0;
+    int counter = 0;
+    for (auto value : *list) {
+        EXPECT_EQ(value.first, expected_value);
+        ++expected_value;
+        ++counter;
+    }
+    EXPECT_EQ(counter, NUM_ELEMENTS);
+}
+
+TEST_F(ConcurrentLinkedListTest, TestConstIterator) {
+    const int NUM_ELEMENTS = 100;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Add(i, 0);
+    }
+
+    int expected_value = 0;
+    int counter = 0;
+    for (auto it = list->cbegin(); it != list->cend(); ++it) {
+        EXPECT_EQ(it->first, expected_value);
+        ++expected_value;
+        ++counter;
+    }
+    EXPECT_EQ(counter, NUM_ELEMENTS);
+}

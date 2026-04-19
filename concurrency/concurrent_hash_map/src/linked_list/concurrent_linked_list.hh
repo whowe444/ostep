@@ -7,11 +7,131 @@
 template<typename K, typename V>
 class ConcurrentLinkedList {
 
+using LinkedListNode = linked_list::Node<std::pair<K, V>>;
+
 public:
+
+    // IteratorTemplate Class Definition.
+    template<bool IsConst>
+    struct IteratorTemplate {
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = std::pair<K, V>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<IsConst, const std::pair<K, V>*, std::pair<K, V>*>;
+        using reference = std::conditional_t<IsConst, const std::pair<K, V>&, std::pair<K, V>&>;
+
+        using lock_type = std::conditional_t<IsConst, std::shared_lock<std::shared_mutex>,
+            std::unique_lock<std::shared_mutex>>;
+    public:
+    
+        // Constructor
+        IteratorTemplate(LinkedListNode* node) 
+            : 
+                current(node),
+                lock(current ? lock_type(current->mtx) : lock_type())
+        {
+        }
+
+        // Define the dereference operator.
+        reference operator*() const { 
+            assert(current && "Dereferencing end() iterator is undefined behavior.");
+            return current->value;
+        }
+
+        // Define the pointer access operator.
+        pointer operator->() const { 
+            assert(current && "Dereferencing end() iterator is undefined behavior.");
+            return &(current->value);
+        }
+
+        // Define the pre-increment operator.
+        IteratorTemplate<IsConst>& operator++() {
+            assert(current && "Incrementing end() iterator is undefined behavior.");
+            current = current->next;
+            if (current) lock = std::move(lock_type(current->mtx));
+            return *this;
+        }
+
+        // Define the post-increment operator.
+        IteratorTemplate<IsConst> operator++(int) {
+            auto tmp = *this;
+
+            // Now pre-increment the current pointer.
+            ++(*this);
+
+            // Now return the temporary.
+            return tmp;
+        }
+
+        // Define the equals operator.
+        bool operator==(const IteratorTemplate<IsConst>& other) const {
+            return this->current == other.current;
+        }
+
+        // Define the not-equals operator.
+        bool operator!=(const IteratorTemplate<IsConst>& other) const {
+            return !(*this == other);
+        }
+
+    private:
+        LinkedListNode* current;
+        lock_type lock;
+    };
+
+    using Iterator = IteratorTemplate<false>;
+    using ConstIterator = IteratorTemplate<true>;
+
+    // Read-only range — shared lock, multiple threads can hold this concurrently
+    class SharedRange {
+        const ConcurrentLinkedList<K, V>* listPointer;
+    public:
+        SharedRange(const ConcurrentLinkedList<K, V>* listPointer_)
+            : listPointer(listPointer_) {}
+
+        ConstIterator begin() { return listPointer->cbegin(); }
+        ConstIterator end()   { return listPointer->cend();   }
+    };
+
+    // Mutating range — unique lock, exclusive access
+    class UniqueRange {
+        ConcurrentLinkedList<K, V>* listPointer;
+    public:
+        UniqueRange(ConcurrentLinkedList<K, V>* listPointer_)
+            : listPointer(listPointer_) {}
+
+        Iterator begin() { return listPointer->begin(); }
+        Iterator end()   { return listPointer->end();   }
+    };
+
+    // Return the SharedRange (read-only)
+    SharedRange GetSharedRange() const { return SharedRange(this); }
+
+    // Return the UniqueRange (mutating)
+    UniqueRange GetUniqueRange() { return UniqueRange(this); }
+
+    // Define the begin function.
+    Iterator begin() {
+        return Iterator(this->sentinel->next);
+    }
+
+    // Define the end function.
+    Iterator end() {
+        return Iterator(nullptr);
+    }
+
+    // Define the cbegin function.
+    ConstIterator cbegin() const {
+        return ConstIterator(this->sentinel->next);
+    }
+
+    // Define the cend function.
+    ConstIterator cend() const {
+        return ConstIterator(nullptr);
+    }
 
     // Constructor 
     ConcurrentLinkedList() {
-        sentinel = new linked_list::Node<std::pair<K, V>>();
+        sentinel = new LinkedListNode();
         size = 0;
     }
 
@@ -34,12 +154,12 @@ public:
     ConcurrentLinkedList& operator=(ConcurrentLinkedList&& other) = delete;
 
     // GetSize
-    size_t GetSize() {
+    size_t GetSize() const {
         return this->size.load();
     }
 
     // IsEmpty
-    bool IsEmpty() {
+    bool IsEmpty() const {
         return this->GetSize() == 0;
     }
 
@@ -47,8 +167,8 @@ public:
     // Returns true upon success
     bool Add(const K& key, const V& value) {
         std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
-        linked_list::Node<std::pair<K, V>>* prev = this->sentinel;
-        linked_list::Node<std::pair<K, V>>* ptr = prev->next;
+        LinkedListNode* prev = this->sentinel;
+        LinkedListNode* ptr = prev->next;
 
         while (ptr) {
             // Grab the next node's lock
@@ -65,16 +185,16 @@ public:
             ptr = ptr->next;
         }
 
-        prev->next = new linked_list::Node<std::pair<K, V>>(nullptr, {key, value});
+        prev->next = new LinkedListNode(nullptr, {key, value});
         this->size++;
         return true;
     }
 
     // Value is Contained in the List.
-    bool Contains(const K& key) {
+    bool Contains(const K& key) const {
         std::shared_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
-        linked_list::Node<std::pair<K, V>>* prev = this->sentinel;
-        linked_list::Node<std::pair<K, V>>* ptr = prev->next;
+        LinkedListNode* prev = this->sentinel;
+        LinkedListNode* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
             std::shared_lock<std::shared_mutex> curr_lock(ptr->mtx);
@@ -93,10 +213,10 @@ public:
     }
 
     // Value stored at the Key.
-    std::optional<V> Get(const K& key) {
+    std::optional<V> Get(const K& key) const {
         std::shared_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
-        linked_list::Node<std::pair<K, V>>* prev = this->sentinel;
-        linked_list::Node<std::pair<K, V>>* ptr = prev->next;
+        LinkedListNode* prev = this->sentinel;
+        LinkedListNode* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
             std::shared_lock<std::shared_mutex> curr_lock(ptr->mtx);
@@ -118,8 +238,8 @@ public:
     // Returns value removed
     std::optional<V> Remove(const K& key) {
         std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
-        linked_list::Node<std::pair<K, V>>* prev = this->sentinel;
-        linked_list::Node<std::pair<K, V>>* ptr = prev->next;
+        LinkedListNode* prev = this->sentinel;
+        LinkedListNode* ptr = prev->next;
         while (ptr) {
             // Grab the next node's lock
             std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
@@ -146,7 +266,7 @@ public:
     void Clear() {
         if (!sentinel) return;
         std::unique_lock<std::shared_mutex> prev_lock(this->sentinel->mtx);
-        linked_list::Node<std::pair<K, V>>* ptr = this->sentinel->next;
+        LinkedListNode* ptr = this->sentinel->next;
         while (ptr) {
             std::unique_lock<std::shared_mutex> curr_lock(ptr->mtx);
             auto temp = ptr->next;
@@ -160,7 +280,6 @@ public:
     }
 
 private:
-
-    linked_list::Node<std::pair<K, V>>* sentinel;
+    LinkedListNode* sentinel;
     std::atomic<size_t> size;
 };
