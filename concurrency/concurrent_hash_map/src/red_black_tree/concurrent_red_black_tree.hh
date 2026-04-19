@@ -9,7 +9,109 @@ using namespace red_black_tree;
 template<typename K, typename V>
 class ConcurrentRedBlackTree {
 
+using RedBlackNode = red_black_tree::Node<std::pair<K, V>>;
+
 public:
+
+    // Iterator Template Definition
+    template<bool IsConst>
+    struct IteratorTemplate {
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = std::pair<K, V>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<IsConst, const std::pair<K, V>*, std::pair<K, V>*>;
+        using reference = std::conditional_t<IsConst, const std::pair<K, V>&, std::pair<K, V>&>;
+
+    public:
+
+        // Constructor
+        IteratorTemplate(RedBlackNode* current, RedBlackNode* root) 
+            :
+                current(current),
+                root(root)
+        {
+        }
+
+        // Define the dereference operator.
+        reference operator*() const { return current->value; }
+
+        // Define the pointer access operator.
+        pointer operator->() const { return &(current->value); }
+
+        // Define the pre-increment operator.
+        IteratorTemplate<IsConst>& operator++() {
+            current = ConcurrentRedBlackTree::successor(current);
+            return *this;
+        }
+
+        // Define the post-increment operator.
+        IteratorTemplate<IsConst> operator++(int) {
+            // Grab a copy of the current iterator.
+            auto tmp = *this;
+
+            // Dereference current iter and pre-increment it.
+            ++(*this);
+
+            // Return the iter before pre-incrementing.
+            return tmp;
+        }
+
+        // Define the pre-decrement operator.
+        IteratorTemplate<IsConst>& operator--() {
+            current = ConcurrentRedBlackTree::predecessor(current);
+            return *this;
+        }
+
+        // Define the post-decrement oeprator.
+        IteratorTemplate<IsConst> operator--(int) {
+            // Grab a copy of the current iterator.
+            auto tmp = *this;
+
+            // Pre-decrement the current iter.
+            --(*this);
+
+            // Return the iter before pre-decrementing.
+            return tmp;
+        }
+
+        // Define the equals operator.
+        bool operator==(const IteratorTemplate<IsConst>& other) const { return current == other.current; }
+
+        // Define the not equals operator.
+        bool operator!=(const IteratorTemplate<IsConst>& other) const { return current != other.current; }
+
+    private:
+
+        RedBlackNode* current;
+        RedBlackNode* root;
+    };
+
+    using Iterator = IteratorTemplate<false>;
+    using ConstIterator = IteratorTemplate<true>;
+
+    // Read-only range — shared lock, multiple threads can hold this concurrently
+    class SharedRange {
+        std::shared_lock<std::shared_mutex> lock;
+        const ConcurrentRedBlackTree<K, V>* treePointer;
+    public:
+        SharedRange(std::shared_mutex& treeMutex_, const ConcurrentRedBlackTree<K, V>* treePointer_)
+            : lock(treeMutex_), treePointer(treePointer_) {}
+
+        ConstIterator begin() { return treePointer->cbegin(); }
+        ConstIterator end()   { return treePointer->cend();   }
+    };
+
+    // Mutating range — unique lock, exclusive access
+    class UniqueRange {
+        std::unique_lock<std::shared_mutex> lock;
+        ConcurrentRedBlackTree<K, V>* treePointer;
+    public:
+        UniqueRange(std::shared_mutex& treeMutex_, ConcurrentRedBlackTree<K, V>* treePointer_)
+            : lock(treeMutex_), treePointer(treePointer_) {}
+
+        Iterator begin() { return treePointer->begin(); }
+        Iterator end()   { return treePointer->end();   }
+    };
 
     // Constructor
     ConcurrentRedBlackTree() {
@@ -34,6 +136,13 @@ public:
     // Move Assignment
     ConcurrentRedBlackTree& operator=(ConcurrentRedBlackTree&& other) = delete;
 
+    // Return the SharedRange (read-only)
+    SharedRange GetSharedRange() const { return SharedRange(this->treeMutex, this); }
+
+    // Return the UniqueRange (mutating)
+    UniqueRange GetUniqueRange() { return UniqueRange(this->treeMutex, this); }
+
+
     // GetSize
     int GetSize() {
         return this->size;
@@ -50,7 +159,7 @@ public:
         return this->GetSize() == 0;
     }
 
-    void Clear(red_black_tree::Node<std::pair<K, V>>* node) {
+    void Clear(RedBlackNode* node) {
         std::unique_lock<std::shared_mutex> write_lock(this->treeMutex);
         this->ClearHelper(node);
     }
@@ -62,7 +171,7 @@ public:
         // allocate it and return.
         if (this->IsEmpty()) {
             // The root node is always black.
-            root = new red_black_tree::Node<std::pair<K, V>>(nullptr, nullptr, nullptr, Color::Black, {key, value});
+            root = new RedBlackNode(nullptr, nullptr, nullptr, Color::Black, {key, value});
             this->size++;
             return true;
         }
@@ -83,7 +192,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->left = new red_black_tree::Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
+                    ptr->left = new RedBlackNode(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
 
                     this->rebalanceInsertion(ptr->left);
@@ -96,7 +205,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->right = new red_black_tree::Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
+                    ptr->right = new RedBlackNode(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
                     
                     this->rebalanceInsertion(ptr->right);
@@ -243,7 +352,7 @@ private:
 
     friend class ConcurrentRedBlackTreeTest;
 
-    void ClearHelper(red_black_tree::Node<std::pair<K, V>>* node) {
+    void ClearHelper(RedBlackNode* node) {
         if (!node) return;
         if (node->left) ClearHelper(node->left);
         if (node->right) ClearHelper(node->right);
@@ -258,7 +367,7 @@ private:
         ValidateNode(this->root);
     }
 
-    int ValidateNode(red_black_tree::Node<std::pair<K, V>>* node) {
+    int ValidateNode(RedBlackNode* node) {
         if (!node) return 1;
 
         // Property 3: Red node must not have red children
@@ -279,7 +388,7 @@ private:
         return left_black_height + (node->color == Color::Black ? 1 : 0);
     }
 
-    void replaceWithSuccessorAndDeleteSuccessor(red_black_tree::Node<std::pair<K, V>>* delete_node) {
+    void replaceWithSuccessorAndDeleteSuccessor(RedBlackNode* delete_node) {
         //first find the successor
         auto successor = delete_node->right;
         while (successor->left) successor = successor->left;
@@ -314,7 +423,7 @@ private:
      * @param replacement_node a pointer to the replacement node of the node that was deleted
      * @param deleted_node_color the color of the initial deleted node
      */
-    void rebalanceDeletion(red_black_tree::Node<std::pair<K, V>>* replacement_node, red_black_tree::Node<std::pair<K, V>>* parent_node,
+    void rebalanceDeletion(RedBlackNode* replacement_node, RedBlackNode* parent_node,
             Color deleted_node_color) {
         // There is no rebalancing to do
         if (!parent_node) {
@@ -402,7 +511,7 @@ private:
         }
     }
 
-    void rebalanceInsertion(red_black_tree::Node<std::pair<K, V>>* node) {
+    void rebalanceInsertion(RedBlackNode* node) {
         // Check if I am the root node
         if (!node->parent) {
             node->color = Color::Black;
@@ -463,7 +572,7 @@ private:
         }
     }
 
-    void leftRotation(red_black_tree::Node<std::pair<K, V>>* node) {
+    void leftRotation(RedBlackNode* node) {
         // node must have a right child for left rotations
         assert(node->right != nullptr);
         auto right_child = node->right;
@@ -495,7 +604,7 @@ private:
 
     }
 
-    void rightRotation(red_black_tree::Node<std::pair<K, V>>* node) {
+    void rightRotation(RedBlackNode* node) {
         // node must have a left child for a right rotations
         assert(node->left != nullptr);
         auto left_child = node->left;
@@ -525,8 +634,92 @@ private:
         }
     }
 
-    red_black_tree::Node<std::pair<K, V>>* root;
+    // Helper function to find the successor of a node.
+    static RedBlackNode* successor(RedBlackNode* node) {
+        auto ptr = node;
+        if (ptr->right) { return leftmost(ptr->right); }
+
+        // The right child doesn't exist, so we'll need 
+        // to go up the tree until we "come up" from the 
+        // left child. This implies that the parent of 
+        // that left child node is its successor since, 
+        // the left child is strictly smaller than its parent.
+        auto parent = ptr->parent;
+        while (parent != nullptr && parent->right == ptr) {
+            ptr = parent;
+            parent = parent->parent;
+        }
+        return parent;
+    }
+
+    // Helper function to find the predecessor of a node.
+    static RedBlackNode* predecessor(RedBlackNode* node) {
+        auto ptr = node;
+        if (ptr->left) { return right(ptr->left); }
+
+        // The left child doesn't exist so we'll need to go up
+        // the tree until we "come up" from the right child. This
+        // implies that the parent of that right child is its
+        // predecessor since the right child is strictly greater than
+        // its parent.
+        auto parent = ptr->parent;
+        while (parent != nullptr && parent->left == ptr) {
+            ptr = parent;
+            parent = parent->parent;
+        }
+        return parent;
+
+    }
+
+    // Helper function to find the leftmost node of the tree.
+    static RedBlackNode* leftmost(RedBlackNode* node) {
+        auto ptr = node;
+        while (ptr->left != nullptr) ptr = ptr->left;
+        return ptr;
+    }
+
+    // Helper function to find the rightmost node of the tree.
+    static RedBlackNode* rightmost(RedBlackNode* node) {
+        auto ptr = node;
+        while (ptr->right != nullptr) ptr = ptr->right;
+        return ptr;
+    }
+
+    // Iterator Begin Function
+    Iterator begin() {
+        if (!root) return end();
+        return Iterator(this->leftmost(root), root);
+    }
+
+    // Iterator End Function
+    Iterator end() {
+        return Iterator(nullptr, root);
+    }
+
+    // Const Iterator Begin Function
+    ConstIterator cbegin() const {
+        if (!root) return cend();
+        return ConstIterator(this->leftmost(root), root);
+    }
+
+    // Const Iterator End Function
+    ConstIterator cend() const {
+        return ConstIterator(nullptr, root);
+    }
+
+    // Give the Iterator access to the leftmost and rightmost helper functions.
+    friend struct IteratorTemplate<false>;
+    friend struct IteratorTemplate<true>;
+
+    // Give the SharedRange and UniqueRange access to the begin and end functions.
+    friend class SharedRange;
+    friend class UniqueRange;
+
+    // Give tests access to validate functions.
+    friend class ConcurrentRedBlackTreeTest;
+
+    RedBlackNode* root;
     std::atomic<size_t> size;
-    std::shared_mutex treeMutex;
+    mutable std::shared_mutex treeMutex;
 
 };

@@ -7,8 +7,11 @@
 template<typename K, typename V>
 class ConcurrentRedBlackTree {
 
+using RedBlackNode = Node<std::pair<K, V>>;
+
 public:
 
+    // Iterator Template Definition
     template<bool IsConst>
     struct IteratorTemplate {
         using iterator_category = std::bidirectional_iterator_tag;
@@ -20,7 +23,7 @@ public:
     public:
 
         // Constructor
-        IteratorTemplate(Node<std::pair<K, V>>* current, Node<std::pair<K, V>>* root) 
+        IteratorTemplate(RedBlackNode* current, RedBlackNode* root) 
             :
                 current(current),
                 root(root)
@@ -77,8 +80,8 @@ public:
 
     private:
 
-        Node<std::pair<K, V>>* current;
-        Node<std::pair<K, V>>* root;
+        RedBlackNode* current;
+        RedBlackNode* root;
     };
 
     using Iterator = IteratorTemplate<false>;
@@ -147,7 +150,7 @@ public:
         return this->GetSize() == 0;
     }
 
-    void Clear(Node<std::pair<K, V>>* node) {
+    void Clear(RedBlackNode* node) {
         auto write_lock = this->GetWriteLock();
         this->ClearHelper(node);
     }
@@ -159,7 +162,7 @@ public:
         // allocate it and return.
         if (this->IsEmpty()) {
             // The root node is always black.
-            root = new Node<std::pair<K, V>>(nullptr, nullptr, nullptr, Color::Black, {key, value});
+            root = new RedBlackNode(nullptr, nullptr, nullptr, Color::Black, {key, value});
             this->size++;
             return true;
         }
@@ -180,7 +183,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->left = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
+                    ptr->left = new RedBlackNode(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
 
                     this->rebalanceInsertion(ptr->left);
@@ -193,7 +196,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->right = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
+                    ptr->right = new RedBlackNode(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
                     
                     this->rebalanceInsertion(ptr->right);
@@ -338,7 +341,7 @@ public:
 
 private:
 
-    void ClearHelper(Node<std::pair<K, V>>* node) {
+    void ClearHelper(RedBlackNode* node) {
         if (!node) return;
         if (node->left) ClearHelper(node->left);
         if (node->right) ClearHelper(node->right);
@@ -353,7 +356,7 @@ private:
         ValidateNode(this->root);
     }
 
-    int ValidateNode(Node<std::pair<K, V>>* node) {
+    int ValidateNode(RedBlackNode* node) {
         if (!node) return 1;
 
         // Property 3: Red node must not have red children
@@ -374,7 +377,7 @@ private:
         return left_black_height + (node->color == Color::Black ? 1 : 0);
     }
 
-    void replaceWithSuccessorAndDeleteSuccessor(Node<std::pair<K, V>>* delete_node) {
+    void replaceWithSuccessorAndDeleteSuccessor(RedBlackNode* delete_node) {
         //first find the successor
         auto successor = delete_node->right;
         while (successor->left) successor = successor->left;
@@ -409,7 +412,7 @@ private:
      * @param replacement_node a pointer to the replacement node of the node that was deleted
      * @param deleted_node_color the color of the initial deleted node
      */
-    void rebalanceDeletion(Node<std::pair<K, V>>* replacement_node, Node<std::pair<K, V>>* parent_node,
+    void rebalanceDeletion(RedBlackNode* replacement_node, RedBlackNode* parent_node,
             Color deleted_node_color) {
         // There is no rebalancing to do
         if (!parent_node) {
@@ -497,7 +500,7 @@ private:
         }
     }
 
-    void rebalanceInsertion(Node<std::pair<K, V>>* node) {
+    void rebalanceInsertion(RedBlackNode* node) {
         // Check if I am the root node
         if (!node->parent) {
             node->color = Color::Black;
@@ -558,7 +561,7 @@ private:
         }
     }
 
-    void leftRotation(Node<std::pair<K, V>>* node) {
+    void leftRotation(RedBlackNode* node) {
         // node must have a right child for left rotations
         assert(node->right != nullptr);
         auto right_child = node->right;
@@ -590,7 +593,7 @@ private:
 
     }
 
-    void rightRotation(Node<std::pair<K, V>>* node) {
+    void rightRotation(RedBlackNode* node) {
         // node must have a left child for a right rotations
         assert(node->left != nullptr);
         auto left_child = node->left;
@@ -621,7 +624,7 @@ private:
     }
 
     // Helper function to find the successor of a node.
-    static Node<std::pair<K, V>>* successor(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* successor(RedBlackNode* node) {
         auto ptr = node;
         if (ptr->right) { return leftmost(ptr->right); }
 
@@ -639,7 +642,7 @@ private:
     }
 
     // Helper function to find the predecessor of a node.
-    static Node<std::pair<K, V>>* predecessor(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* predecessor(RedBlackNode* node) {
         auto ptr = node;
         if (ptr->left) { return right(ptr->left); }
 
@@ -658,14 +661,14 @@ private:
     }
 
     // Helper function to find the leftmost node of the tree.
-    static Node<std::pair<K, V>>* leftmost(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* leftmost(RedBlackNode* node) {
         auto ptr = node;
         while (ptr->left != nullptr) ptr = ptr->left;
         return ptr;
     }
 
     // Helper function to find the rightmost node of the tree.
-    static Node<std::pair<K, V>>* rightmost(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* rightmost(RedBlackNode* node) {
         auto ptr = node;
         while (ptr->right != nullptr) ptr = ptr->right;
         return ptr;
@@ -714,7 +717,7 @@ private:
     // Give tests access to validate functions.
     friend class ConcurrentRedBlackTreeTest;
 
-    Node<std::pair<K, V>>* root;
+    RedBlackNode* root;
     std::atomic<size_t> size;
     mutable std::shared_mutex treeMutex;
 

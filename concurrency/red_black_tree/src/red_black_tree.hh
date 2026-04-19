@@ -5,19 +5,22 @@
 template<typename K, typename V>
 class RedBlackTree {
 
+using RedBlackNode = Node<std::pair<K, V>>;
+
 public:
 
-    struct Iterator {
+    template<bool IsConst>
+    struct IteratorTemplate {
         using iterator_category = std::bidirectional_iterator_tag;
         using value_type = std::pair<K, V>;
         using difference_type = std::ptrdiff_t;
-        using pointer = std::pair<K, V>*;
-        using reference = std::pair<K, V>&;
+        using pointer = std::conditional_t<IsConst, const std::pair<K, V>*, std::pair<K, V>*>;
+        using reference = std::conditional_t<IsConst, const std::pair<K, V>&, std::pair<K, V>&>;
 
     public:
 
         // Constructor
-        Iterator(Node<std::pair<K, V>>* current, Node<std::pair<K, V>>* root) 
+        IteratorTemplate(RedBlackNode* current, RedBlackNode* root) 
             :
                 current(current),
                 root(root)
@@ -31,13 +34,13 @@ public:
         pointer operator->() const { return &(current->value); }
 
         // Define the pre-increment operator.
-        Iterator& operator++() {
+        IteratorTemplate<IsConst>& operator++() {
             current = RedBlackTree::successor(current);
             return *this;
         }
 
         // Define the post-increment operator.
-        Iterator operator++(int) {
+        IteratorTemplate<IsConst> operator++(int) {
             // Grab a copy of the current iterator.
             auto tmp = *this;
 
@@ -49,13 +52,13 @@ public:
         }
 
         // Define the pre-decrement operator.
-        Iterator& operator--() {
+        IteratorTemplate<IsConst>& operator--() {
             current = RedBlackTree::predecessor(current);
             return *this;
         }
 
         // Define the post-decrement oeprator.
-        Iterator operator--(int) {
+        IteratorTemplate<IsConst> operator--(int) {
             // Grab a copy of the current iterator.
             auto tmp = *this;
 
@@ -67,16 +70,19 @@ public:
         }
 
         // Define the equals operator.
-        bool operator==(const Iterator& other) const { return current == other.current; }
+        bool operator==(const IteratorTemplate<IsConst>& other) const { return current == other.current; }
 
         // Define the not equals operator.
-        bool operator!=(const Iterator& other) const { return current != other.current; }
+        bool operator!=(const IteratorTemplate<IsConst>& other) const { return current != other.current; }
 
     private:
 
-        Node<std::pair<K, V>>* current;
-        Node<std::pair<K, V>>* root;
+        RedBlackNode* current;
+        RedBlackNode* root;
     };
+
+    using Iterator = IteratorTemplate<false>;
+    using ConstIterator = IteratorTemplate<true>;
 
     // Constructor
     RedBlackTree() {
@@ -91,7 +97,7 @@ public:
 
     // Copy Ctor
     RedBlackTree(const RedBlackTree& other) : RedBlackTree() {
-        Node<std::pair<K, V>>* ptr = other.root;
+        RedBlackNode* ptr = other.root;
         this->CopyHelper(ptr);
     }
 
@@ -104,13 +110,13 @@ public:
         this->Clear();
 
         // Now copy over the other tree
-        Node<std::pair<K, V>>* ptr = other.root;
+        RedBlackNode* ptr = other.root;
         this->CopyHelper(ptr);
 
         return *this;
     }
 
-    void CopyHelper(Node<std::pair<K, V>>* node) {
+    void CopyHelper(RedBlackNode* node) {
         if (!node) return;
 
         this->Insert(node->value.first, node->value.second);
@@ -158,6 +164,15 @@ public:
         return Iterator(nullptr, root);
     }
 
+    ConstIterator cbegin() const {
+        if (!root) return cend();
+        return ConstIterator(this->leftmost(root), root);
+    }
+
+    ConstIterator cend() const {
+        return ConstIterator(nullptr, root);
+    }
+
     // GetSize
     int GetSize() {
         return this->size;
@@ -168,7 +183,7 @@ public:
         return this->GetSize() == 0;
     }
 
-    void Clear(Node<std::pair<K, V>>* node) {
+    void Clear(RedBlackNode* node) {
         if (!node) return;
         if (node->left) Clear(node->left);
         if (node->right) Clear(node->right);
@@ -182,7 +197,7 @@ public:
         // allocate it and return.
         if (this->IsEmpty()) {
             // The root node is always black.
-            root = new Node<std::pair<K, V>>(nullptr, nullptr, nullptr, Color::Black, {key, value});
+            root = new RedBlackNode(nullptr, nullptr, nullptr, Color::Black, {key, value});
             this->size++;
             return true;
         }
@@ -203,7 +218,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->left = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
+                    ptr->left = new RedBlackNode(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
 
                     this->rebalanceInsertion(ptr->left);
@@ -216,7 +231,7 @@ public:
                     continue;
                 } else {
                     // add new node
-                    ptr->right = new Node<std::pair<K, V>>(nullptr, nullptr, ptr, Color::Red, {key, value});
+                    ptr->right = new RedBlackNode(nullptr, nullptr, ptr, Color::Red, {key, value});
                     this->size++;
                     
                     this->rebalanceInsertion(ptr->right);
@@ -368,7 +383,7 @@ private:
         ValidateNode(this->root);
     }
 
-    int ValidateNode(Node<std::pair<K, V>>* node) {
+    int ValidateNode(RedBlackNode* node) {
         if (!node) return 1;
 
         // Property 3: Red node must not have red children
@@ -389,7 +404,7 @@ private:
         return left_black_height + (node->color == Color::Black ? 1 : 0);
     }
 
-    void replaceWithSuccessorAndDeleteSuccessor(Node<std::pair<K, V>>* delete_node) {
+    void replaceWithSuccessorAndDeleteSuccessor(RedBlackNode* delete_node) {
         //first find the successor
         auto successor = delete_node->right;
         while (successor->left) successor = successor->left;
@@ -424,7 +439,7 @@ private:
      * @param replacement_node a pointer to the replacement node of the node that was deleted
      * @param deleted_node_color the color of the initial deleted node
      */
-    void rebalanceDeletion(Node<std::pair<K, V>>* replacement_node, Node<std::pair<K, V>>* parent_node,
+    void rebalanceDeletion(RedBlackNode* replacement_node, RedBlackNode* parent_node,
             Color deleted_node_color) {
         // There is no rebalancing to do
         if (!parent_node) {
@@ -512,7 +527,7 @@ private:
         }
     }
 
-    void rebalanceInsertion(Node<std::pair<K, V>>* node) {
+    void rebalanceInsertion(RedBlackNode* node) {
         // Check if I am the root node
         if (!node->parent) {
             node->color = Color::Black;
@@ -573,7 +588,7 @@ private:
         }
     }
 
-    void leftRotation(Node<std::pair<K, V>>* node) {
+    void leftRotation(RedBlackNode* node) {
         // node must have a right child for left rotations
         assert(node->right != nullptr);
         auto right_child = node->right;
@@ -605,7 +620,7 @@ private:
 
     }
 
-    void rightRotation(Node<std::pair<K, V>>* node) {
+    void rightRotation(RedBlackNode* node) {
         // node must have a left child for a right rotations
         assert(node->left != nullptr);
         auto left_child = node->left;
@@ -636,7 +651,7 @@ private:
     }
 
     // Helper function to find the successor of a node.
-    static Node<std::pair<K, V>>* successor(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* successor(RedBlackNode* node) {
         auto ptr = node;
         if (ptr->right) { return leftmost(ptr->right); }
 
@@ -654,7 +669,7 @@ private:
     }
 
     // Helper function to find the predecessor of a node.
-    static Node<std::pair<K, V>>* predecessor(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* predecessor(RedBlackNode* node) {
         auto ptr = node;
         if (ptr->left) { return right(ptr->left); }
 
@@ -672,23 +687,24 @@ private:
     }
 
     // Helper function to find the leftmost node of the tree.
-    static Node<std::pair<K, V>>* leftmost(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* leftmost(RedBlackNode* node) {
         auto ptr = node;
         while (ptr->left != nullptr) ptr = ptr->left;
         return ptr;
     }
 
     // Helper function to find the rightmost node of the tree.
-    static Node<std::pair<K, V>>* rightmost(Node<std::pair<K, V>>* node) {
+    static RedBlackNode* rightmost(RedBlackNode* node) {
         auto ptr = node;
         while (ptr->right != nullptr) ptr = ptr->right;
         return ptr;
     }
 
     // Give the Iterator access to the leftmost and rightmost helper functions.
-    friend struct Iterator;
+    friend struct IteratorTemplate<false>;
+    friend struct IteratorTemplate<true>;
 
-    Node<std::pair<K, V>>* root;
+    RedBlackNode* root;
     size_t size;
 
 };

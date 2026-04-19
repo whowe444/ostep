@@ -440,3 +440,27 @@ TEST_F(RedBlackTreeTest, TestIterator) {
     }
 
 }
+
+TEST_F(RedBlackTreeTest, TestConstIterator) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
+    };
+
+    // Insert elements into the tree
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+
+    // Now iterate through the tree
+    int expectedKey = std::numeric_limits<int>::min();
+    for (auto it = tree->cbegin(); it != tree->cend(); ++it) {
+        const auto& [key, value] = *it;
+        // Verify that the keys are monotonically increasing.
+        EXPECT_TRUE(key > expectedKey);
+        expectedKey = key;
+
+        // Verify the key / value pair.
+        EXPECT_EQ(key*10, value);
+    }
+
+}

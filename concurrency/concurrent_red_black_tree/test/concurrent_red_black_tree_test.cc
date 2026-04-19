@@ -433,7 +433,6 @@ TEST_F(ConcurrentRedBlackTreeTest, BenchmarkAdd) {
         << " nanoseconds per Add operation." << std::endl;
 }
 
-
 TEST_F(ConcurrentRedBlackTreeTest, TestWriteIterator) {
     std::vector<std::pair<int, int>> pairs = {
         {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
