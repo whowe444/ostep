@@ -32,14 +32,14 @@ public:
 
         // Define the pre-increment operator.
         Iterator& operator++() {
-            current = this->successor(current);
+            current = RedBlackTree::successor(current);
             return *this;
         }
 
         // Define the post-increment operator.
         Iterator operator++(int) {
             // Grab a copy of the current iterator.
-            Iterator tmp = *this;
+            auto tmp = *this;
 
             // Dereference current iter and pre-increment it.
             ++(*this);
@@ -50,14 +50,14 @@ public:
 
         // Define the pre-decrement operator.
         Iterator& operator--() {
-            current = this->predecessor(current);
+            current = RedBlackTree::predecessor(current);
             return *this;
         }
 
         // Define the post-decrement oeprator.
         Iterator operator--(int) {
             // Grab a copy of the current iterator.
-            Iterator tmp = *this;
+            auto tmp = *this;
 
             // Pre-decrement the current iter.
             --(*this);
@@ -73,43 +73,6 @@ public:
         bool operator!=(const Iterator& other) const { return current != other.current; }
 
     private:
-
-        // Helper function to find the successor of a node.
-        Node<std::pair<K, V>>* successor(Node<std::pair<K, V>>* node) {
-            auto ptr = node;
-            if (ptr->right) { return leftmost(ptr->right); }
-
-            // The right child doesn't exist, so we'll need 
-            // to go up the tree until we "come up" from the 
-            // left child. This implies that the parent of 
-            // that left child node is its successor since, 
-            // the left child is strictly smaller than its parent.
-            auto parent = ptr->parent;
-            while (parent != nullptr && parent->right == ptr) {
-                ptr = parent;
-                parent = parent->parent;
-            }
-            return parent;
-        }
-
-        // Helper function to find the predecessor of a node.
-        Node<std::pair<K, V>>* predecessor(Node<std::pair<K, V>>* node) {
-            auto ptr = node;
-            if (ptr->left) { return right(ptr->left); }
-
-            // The left child doesn't exist so we'll need to go up
-            // the tree until we "come up" from the right child. This
-            // implies that the parent of that right child is its
-            // predecessor since the right child is strictly greater than
-            // its parent.
-            auto parent = ptr->parent;
-            while (parent != nullptr && parent->left == ptr) {
-                ptr = parent;
-                parent = parent->parent;
-            }
-            return parent;
-
-        }
 
         Node<std::pair<K, V>>* current;
         Node<std::pair<K, V>>* root;
@@ -670,6 +633,42 @@ private:
                 parent->left = left_child;
             }
         }
+    }
+
+    // Helper function to find the successor of a node.
+    static Node<std::pair<K, V>>* successor(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        if (ptr->right) { return leftmost(ptr->right); }
+
+        // The right child doesn't exist, so we'll need 
+        // to go up the tree until we "come up" from the 
+        // left child. This implies that the parent of 
+        // that left child node is its successor since, 
+        // the left child is strictly smaller than its parent.
+        auto parent = ptr->parent;
+        while (parent != nullptr && parent->right == ptr) {
+            ptr = parent;
+            parent = parent->parent;
+        }
+        return parent;
+    }
+
+    // Helper function to find the predecessor of a node.
+    static Node<std::pair<K, V>>* predecessor(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        if (ptr->left) { return right(ptr->left); }
+
+        // The left child doesn't exist so we'll need to go up
+        // the tree until we "come up" from the right child. This
+        // implies that the parent of that right child is its
+        // predecessor since the right child is strictly greater than
+        // its parent.
+        auto parent = ptr->parent;
+        while (parent != nullptr && parent->left == ptr) {
+            ptr = parent;
+            parent = parent->parent;
+        }
+        return parent;
     }
 
     // Helper function to find the leftmost node of the tree.
