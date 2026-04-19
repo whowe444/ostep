@@ -10,7 +10,7 @@ public:
     // Iterator Template Definition
     template<bool IsConst>
     struct IteratorTemplate {
-        using iterator_category = std::bidirectional_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using value_type = std::pair<K, V>;
         using difference_type = std::ptrdiff_t;
         using pointer = std::conditional_t<IsConst, const std::pair<K, V>*, std::pair<K, V>*>;
@@ -40,7 +40,7 @@ public:
                 map(map_),
                 currentIndex(currentIndex_),
                 range(make_range(currentIndex)),
-                current(range.has_value() ? std::optional<iterator_type>(range->begin()) : std::nullopt) //std::optional<iterator_type>(iterator_type{nullptr, nullptr}))
+                current(range.has_value() ? std::optional<iterator_type>(range->begin()) : std::nullopt)
         {
         }
 
@@ -96,51 +96,6 @@ public:
             ++(*this);
 
             // Return the iter before pre-incrementing.
-            return tmp;
-        }
-
-        // Define the pre-decrement operator.
-        IteratorTemplate<IsConst>& operator--() {
-            // Move the iterator back.
-            assert(current.has_value() && "Decrementing end() iterator is undefined behavior.");
-            if (*current != range->begin()) {
-                --*current;
-            } else {
-                --currentIndex;
-                while (currentIndex >= 0 && map->buckets[currentIndex].IsEmpty()) {
-                    --currentIndex;
-                }
-
-                if (currentIndex >= 0) {                    
-                    // Move to the previous bucket
-                    if constexpr (IsConst) {
-                        range = map->buckets[currentIndex].GetSharedRange();
-                    } else {
-                        range = map->buckets[currentIndex].GetUniqueRange();
-                    }
-
-                    // Set current
-                    *current = range->end();
-                    --*current;
-                } else {
-                    // Set current to nullopt to indicate that we are before the beginning of the map.
-                    range = std::nullopt;
-                    current = std::nullopt;
-                }
-            }
-
-            return *this;
-        }
-
-        // Define the post-decrement operator.
-        IteratorTemplate<IsConst> operator--(int) {
-            // Grab a copy of the current iterator.
-            auto tmp = *this;
-
-            // Dereference current iter and pre-decrement it.
-            --(*this);
-
-            // Return the iter before pre-decrementing.
             return tmp;
         }
 
