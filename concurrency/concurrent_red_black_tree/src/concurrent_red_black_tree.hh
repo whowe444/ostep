@@ -9,6 +9,105 @@ class ConcurrentRedBlackTree {
 
 public:
 
+    template<bool IsConst>
+    struct IteratorTemplate {
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = std::pair<K, V>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<IsConst, const std::pair<K, V>*, std::pair<K, V>*>;
+        using reference = std::conditional_t<IsConst, const std::pair<K, V>&, std::pair<K, V>&>;
+
+    public:
+
+        // Constructor
+        IteratorTemplate(Node<std::pair<K, V>>* current, Node<std::pair<K, V>>* root) 
+            :
+                current(current),
+                root(root)
+        {
+        }
+
+        // Define the dereference operator.
+        reference operator*() const { return current->value; }
+
+        // Define the pointer access operator.
+        pointer operator->() const { return &(current->value); }
+
+        // Define the pre-increment operator.
+        IteratorTemplate<IsConst>& operator++() {
+            current = ConcurrentRedBlackTree::successor(current);
+            return *this;
+        }
+
+        // Define the post-increment operator.
+        IteratorTemplate<IsConst> operator++(int) {
+            // Grab a copy of the current iterator.
+            auto tmp = *this;
+
+            // Dereference current iter and pre-increment it.
+            ++(*this);
+
+            // Return the iter before pre-incrementing.
+            return tmp;
+        }
+
+        // Define the pre-decrement operator.
+        IteratorTemplate<IsConst>& operator--() {
+            current = ConcurrentRedBlackTree::predecessor(current);
+            return *this;
+        }
+
+        // Define the post-decrement oeprator.
+        IteratorTemplate<IsConst> operator--(int) {
+            // Grab a copy of the current iterator.
+            auto tmp = *this;
+
+            // Pre-decrement the current iter.
+            --(*this);
+
+            // Return the iter before pre-decrementing.
+            return tmp;
+        }
+
+        // Define the equals operator.
+        bool operator==(const IteratorTemplate<IsConst>& other) const { return current == other.current; }
+
+        // Define the not equals operator.
+        bool operator!=(const IteratorTemplate<IsConst>& other) const { return current != other.current; }
+
+    private:
+
+        Node<std::pair<K, V>>* current;
+        Node<std::pair<K, V>>* root;
+    };
+
+    using Iterator = IteratorTemplate<false>;
+    using ConstIterator = IteratorTemplate<true>;
+
+    // Read-only range — shared lock, multiple threads can hold this concurrently
+    class SharedRange {
+        std::shared_lock<std::shared_mutex> lock;
+        const ConcurrentRedBlackTree<K, V>* treePointer;
+    public:
+        SharedRange(std::shared_mutex& treeMutex_, const ConcurrentRedBlackTree<K, V>* treePointer_)
+            : lock(treeMutex_), treePointer(treePointer_) {}
+
+        ConstIterator begin() { return treePointer->cbegin(); }
+        ConstIterator end()   { return treePointer->cend();   }
+    };
+
+    // Mutating range — unique lock, exclusive access
+    class UniqueRange {
+        std::unique_lock<std::shared_mutex> lock;
+        ConcurrentRedBlackTree<K, V>* treePointer;
+    public:
+        UniqueRange(std::shared_mutex& treeMutex_, ConcurrentRedBlackTree<K, V>* treePointer_)
+            : lock(treeMutex_), treePointer(treePointer_) {}
+
+        Iterator begin() { return treePointer->begin(); }
+        Iterator end()   { return treePointer->end();   }
+    };
+
     // Constructor
     ConcurrentRedBlackTree() {
         root = nullptr;
@@ -32,6 +131,12 @@ public:
     // Move Assignment
     ConcurrentRedBlackTree& operator=(ConcurrentRedBlackTree&& other) = delete;
 
+    // Return the SharedRange (read-only)
+    SharedRange GetSharedRange() const { return SharedRange(this->treeMutex, this); }
+
+    // Return the UniqueRange (mutating)
+    UniqueRange GetUniqueRange() { return UniqueRange(this->treeMutex, this); }
+
     // GetSize
     int GetSize() {
         return this->size;
@@ -43,13 +148,13 @@ public:
     }
 
     void Clear(Node<std::pair<K, V>>* node) {
-        std::unique_lock<std::shared_mutex> write_lock(this->treeMutex);
+        auto write_lock = this->GetWriteLock();
         this->ClearHelper(node);
     }
 
     // Insert
     bool Insert(const K& key, const V& value) {
-        std::unique_lock<std::shared_mutex> write_lock(this->treeMutex);
+        auto write_lock = this->GetWriteLock();
         // If root is NULL, we need to 
         // allocate it and return.
         if (this->IsEmpty()) {
@@ -102,7 +207,7 @@ public:
 
     // Get
     std::optional<V> Get(const K& key) {
-        std::shared_lock<std::shared_mutex> read_lock(this->treeMutex);
+        auto read_lock = this->GetReadLock();
         if (this->IsEmpty()) return std::nullopt;
 
         auto ptr = this->root;
@@ -116,7 +221,7 @@ public:
 
     // Delete
     std::optional<V> Delete(const K& key) {
-        std::unique_lock<std::shared_mutex> write_lock(this->treeMutex);
+        auto write_lock = this->GetWriteLock();
         if (this->IsEmpty()) return std::nullopt;
 
         // special case for root node
@@ -232,8 +337,6 @@ public:
     }
 
 private:
-
-    friend class ConcurrentRedBlackTreeTest;
 
     void ClearHelper(Node<std::pair<K, V>>* node) {
         if (!node) return;
@@ -517,8 +620,102 @@ private:
         }
     }
 
+    // Helper function to find the successor of a node.
+    static Node<std::pair<K, V>>* successor(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        if (ptr->right) { return leftmost(ptr->right); }
+
+        // The right child doesn't exist, so we'll need 
+        // to go up the tree until we "come up" from the 
+        // left child. This implies that the parent of 
+        // that left child node is its successor since, 
+        // the left child is strictly smaller than its parent.
+        auto parent = ptr->parent;
+        while (parent != nullptr && parent->right == ptr) {
+            ptr = parent;
+            parent = parent->parent;
+        }
+        return parent;
+    }
+
+    // Helper function to find the predecessor of a node.
+    static Node<std::pair<K, V>>* predecessor(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        if (ptr->left) { return right(ptr->left); }
+
+        // The left child doesn't exist so we'll need to go up
+        // the tree until we "come up" from the right child. This
+        // implies that the parent of that right child is its
+        // predecessor since the right child is strictly greater than
+        // its parent.
+        auto parent = ptr->parent;
+        while (parent != nullptr && parent->left == ptr) {
+            ptr = parent;
+            parent = parent->parent;
+        }
+        return parent;
+
+    }
+
+    // Helper function to find the leftmost node of the tree.
+    static Node<std::pair<K, V>>* leftmost(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        while (ptr->left != nullptr) ptr = ptr->left;
+        return ptr;
+    }
+
+    // Helper function to find the rightmost node of the tree.
+    static Node<std::pair<K, V>>* rightmost(Node<std::pair<K, V>>* node) {
+        auto ptr = node;
+        while (ptr->right != nullptr) ptr = ptr->right;
+        return ptr;
+    }
+
+    // Iterator Begin Function
+    Iterator begin() {
+        if (!root) return end();
+        return Iterator(this->leftmost(root), root);
+    }
+
+    // Iterator End Function
+    Iterator end() {
+        return Iterator(nullptr, root);
+    }
+
+    // Const Iterator Begin Function
+    ConstIterator cbegin() const {
+        if (!root) return cend();
+        return ConstIterator(this->leftmost(root), root);
+    }
+
+    // Const Iterator End Function
+    ConstIterator cend() const {
+        return ConstIterator(nullptr, root);
+    }
+
+    // Return the read-lock
+    std::shared_lock<std::shared_mutex> GetReadLock() const{
+        return std::shared_lock<std::shared_mutex>(this->treeMutex);
+    }
+
+    // Return the write-lock
+    std::unique_lock<std::shared_mutex> GetWriteLock() {
+        return std::unique_lock<std::shared_mutex>(this->treeMutex);
+    }
+
+    // Give the Iterator access to the leftmost and rightmost helper functions.
+    friend struct IteratorTemplate<false>;
+    friend struct IteratorTemplate<true>;
+
+    // Give the SharedRange and UniqueRange access to the begin and end functions.
+    friend class SharedRange;
+    friend class UniqueRange;
+
+    // Give tests access to validate functions.
+    friend class ConcurrentRedBlackTreeTest;
+
     Node<std::pair<K, V>>* root;
     std::atomic<size_t> size;
-    std::shared_mutex treeMutex;
+    mutable std::shared_mutex treeMutex;
 
 };

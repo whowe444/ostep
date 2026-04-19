@@ -432,3 +432,48 @@ TEST_F(ConcurrentRedBlackTreeTest, BenchmarkAdd) {
     std::cout << "BenchmarkAdd took: " << std::to_string(duration.count() / (double)NUM_ELEMENTS)
         << " nanoseconds per Add operation." << std::endl;
 }
+
+
+TEST_F(ConcurrentRedBlackTreeTest, TestWriteIterator) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
+    };
+
+    // Insert elements into the tree
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+
+    // Now iterate through the tree
+    int expectedKey = std::numeric_limits<int>::min();
+    for (const auto& [key, value] : this->tree->GetUniqueRange()) {
+        // Verify that the keys are monotonically increasing.
+        EXPECT_TRUE(key > expectedKey);
+        expectedKey = key;
+
+        // Verify the key / value pair.
+        EXPECT_EQ(key*10, value);
+    }
+}
+
+TEST_F(ConcurrentRedBlackTreeTest, TestReadIterator) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
+    };
+
+    // Insert elements into the tree
+    for (auto [first, second] : pairs) {
+        tree->Insert(first, second);
+    }
+
+    // Now iterate through the tree
+    int expectedKey = std::numeric_limits<int>::min();
+    for (const auto& [key, value] : this->tree->GetSharedRange()) {
+        // Verify that the keys are monotonically increasing.
+        EXPECT_TRUE(key > expectedKey);
+        expectedKey = key;
+
+        // Verify the key / value pair.
+        EXPECT_EQ(key*10, value);
+    }
+}
