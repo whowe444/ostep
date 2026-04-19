@@ -219,3 +219,31 @@ TEST_F(LinkedListTest, BenchmarkRemove) {
     std::cout << "BenchmarkAdd took: " << std::to_string(duration.count() / (double)NUM_ELEMENTS)
         << " nanoseconds per Remove operation." << std::endl;
 }
+
+TEST_F(LinkedListTest, WriteIteratorTest) {
+    const int NUM_ELEMENTS = 1000;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Add(i);
+    }
+
+    int counter = 0;
+    for (auto& value : *this->list) {
+        EXPECT_EQ(value, counter);
+        counter++;
+    }
+    EXPECT_EQ(counter, NUM_ELEMENTS);
+}
+
+TEST_F(LinkedListTest, ReadIteratorTest) {
+    const int NUM_ELEMENTS = 1000;
+    for (int i = 0; i < NUM_ELEMENTS; i++) {
+        this->list->Add(i);
+    }
+
+    int counter = 0;
+    for (auto it = this->list->cbegin(); it != this->list->cend(); ++it) {
+        EXPECT_EQ(*it, counter);
+        counter++;
+    }
+    EXPECT_EQ(counter, NUM_ELEMENTS);
+}
