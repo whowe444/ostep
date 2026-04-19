@@ -10,7 +10,7 @@ public:
     // Iterator Template Definition
     template<bool IsConst>
     struct IteratorTemplate {
-        using iterator_category = std::bidirectional_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
         using value_type = std::pair<K, V>;
         using difference_type = std::ptrdiff_t;
         using pointer = std::conditional_t<IsConst, const std::pair<K, V>*, std::pair<K, V>*>;
@@ -38,19 +38,26 @@ public:
                 map(map_),
                 currentIndex(currentIndex_),
                 range(make_range(currentIndex)),
-                current(range.has_value() ? std::optional<iterator_type>(range->begin()) : std::optional<iterator_type>(iterator_type{nullptr, nullptr}))
+                current(range.has_value() ? std::optional<iterator_type>(range->begin()) : std::nullopt) //std::optional<iterator_type>(iterator_type{nullptr, nullptr}))
         {
         }
 
         // Define the dereference operator.
-        reference operator*() const { return **current;}
+        reference operator*() const { 
+            assert(current.has_value() && "Dereferencing end() iterator is undefined behavior.");
+            return **current;
+        }
 
         // Define the pointer access operator.
-        pointer operator->() const { return &(**current);}
+        pointer operator->() const { 
+            assert(current.has_value() && "Dereferencing end() iterator is undefined behavior.");
+            return &(**current);
+        }
 
         // Define the pre-increment operator.
         IteratorTemplate<IsConst>& operator++() {
             // First move the iterator forward.
+            assert(current.has_value() && "Incrementing end() iterator is undefined behavior.");
             ++*current;
 
             while(*current == range->end()) {
@@ -58,7 +65,11 @@ public:
                 // If the current index is out of bounds
                 // break out of the loop and return the
                 // current value of the iterator (which should be end()).
-                if (currentIndex >= map->NUM_BUCKETS) break;
+                if (currentIndex >= map->NUM_BUCKETS) {
+                    range = std::nullopt;
+                    current = std::nullopt;
+                    break;
+                }
 
                 // Move to the next bucket
                 if constexpr (IsConst) {
@@ -68,7 +79,7 @@ public:
                 }
 
                 // Set current
-                *current = range->begin();
+                current.emplace(range->begin());
             }
 
             return *this;
@@ -86,45 +97,46 @@ public:
             return tmp;
         }
 
-        // Define the pre-decrement operator.
-        IteratorTemplate<IsConst>& operator--() {
-            // Move the iterator back.
-            if (*current != range->begin()) {
-                --*current;
-            } else {
-                --currentIndex;
-                while (currentIndex >= 0 && map->buckets[currentIndex].IsEmpty()) {
-                    --currentIndex;
-                }
+        // // Define the pre-decrement operator.
+        // IteratorTemplate<IsConst>& operator--() {
+        //     // Move the iterator back.
+        //     assert(current.has_value() && "Decrementing end() iterator is undefined behavior.");
+        //     if (*current != range->begin()) {
+        //         --*current;
+        //     } else {
+        //         --currentIndex;
+        //         while (currentIndex >= 0 && map->buckets[currentIndex].IsEmpty()) {
+        //             --currentIndex;
+        //         }
 
-                if (currentIndex >= 0) {                    
-                    // Move to the previous bucket
-                    if constexpr (IsConst) {
-                        range = map->buckets[currentIndex].GetSharedRange();
-                    } else {
-                        range = map->buckets[currentIndex].GetUniqueRange();
-                    }
+        //         if (currentIndex >= 0) {                    
+        //             // Move to the previous bucket
+        //             if constexpr (IsConst) {
+        //                 range = map->buckets[currentIndex].GetSharedRange();
+        //             } else {
+        //                 range = map->buckets[currentIndex].GetUniqueRange();
+        //             }
 
-                    // Set current
-                    *current = range->end();
-                    --*current;
-                }
-            }
+        //             // Set current
+        //             *current = range->end();
+        //             --*current;
+        //         }
+        //     }
 
-            return *this;
-        }
+        //     return *this;
+        // }
 
-        // Define the post-decrement operator.
-        IteratorTemplate<IsConst> operator--(int) {
-            // Grab a copy of the current iterator.
-            auto tmp = *this;
+        // // Define the post-decrement operator.
+        // IteratorTemplate<IsConst> operator--(int) {
+        //     // Grab a copy of the current iterator.
+        //     auto tmp = *this;
 
-            // Dereference current iter and pre-decrement it.
-            --(*this);
+        //     // Dereference current iter and pre-decrement it.
+        //     --(*this);
 
-            // Return the iter before pre-decrementing.
-            return tmp;
-        }
+        //     // Return the iter before pre-decrementing.
+        //     return tmp;
+        // }
 
         // Define the equals operator.
         bool operator==(const IteratorTemplate<IsConst>& other) const { 
