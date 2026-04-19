@@ -144,7 +144,7 @@ public:
 
 
     // GetSize
-    int GetSize() {
+    int GetSize() const {
         return this->size;
     }
 
@@ -155,7 +155,7 @@ public:
     }
 
     // IsEmpty
-    bool IsEmpty() {
+    bool IsEmpty() const {
         return this->GetSize() == 0;
     }
 
@@ -218,7 +218,7 @@ public:
     }
 
     // Get
-    std::optional<V> Get(const K& key) {
+    std::optional<V> Get(const K& key) const {
         std::shared_lock<std::shared_mutex> read_lock(this->treeMutex);
         if (this->IsEmpty()) return std::nullopt;
 

@@ -164,3 +164,30 @@ TEST_F(ConcurrentRedBlackHashMapTest, TestWriteIterator) {
     // Verify number of elements iterated through.
     EXPECT_EQ(counter, pairs.size());
 }
+
+TEST_F(ConcurrentRedBlackHashMapTest, TestConstIterator) {
+    std::vector<std::pair<int, int>> pairs = {
+        {5, 50}, {3, 30}, {7, 70}, {1, 10}, {4, 40}, {9, 90}, {10, 100}
+    };
+
+    // Insert elements into the hash map
+    for (auto [first, second] : pairs) {
+        map->Insert(first, second);
+    }
+
+    // Now iterate through the tree
+    int counter = 0;
+    for (auto it = map->cbegin(); it != map->cend(); ++it) {
+        // Verify the key / value pair.
+        EXPECT_EQ(it->first*10, it->second);
+        ++counter;
+
+        // Verify the element was in the original vector.
+        auto pairs_it = std::find(pairs.begin(), pairs.end(), std::make_pair(it->first, it->second));
+        EXPECT_NE(pairs_it, pairs.end());
+    }
+
+    // Verify number of elements iterated through.
+    EXPECT_EQ(counter, pairs.size());
+}
+
