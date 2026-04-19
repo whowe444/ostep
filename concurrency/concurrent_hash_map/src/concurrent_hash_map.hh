@@ -23,15 +23,12 @@ public:
             typename C<K, V>::Iterator>;
     public:
 
-        range_type make_range(int currentIndex) {
+        std::optional<range_type> make_range(int currentIndex) {
+            if (currentIndex >= map->NUM_BUCKETS) return std::nullopt;
             if constexpr (IsConst) {
-                return (currentIndex < map->NUM_BUCKETS) ? 
-                    map->buckets[currentIndex].GetSharedRange() :
-                    map->buckets[NUM_BUCKETS-1].GetSharedRange();
+                return map->buckets[currentIndex].GetSharedRange();
             } else {
-                return (currentIndex < map->NUM_BUCKETS) ? 
-                    map->buckets[currentIndex].GetUniqueRange() :
-                    map->buckets[NUM_BUCKETS-1].GetUniqueRange();
+                return map->buckets[currentIndex].GetUniqueRange();
             }
         }
 
@@ -41,27 +38,27 @@ public:
                 map(map_),
                 currentIndex(currentIndex_),
                 range(make_range(currentIndex)),
-                current(currentIndex < map->NUM_BUCKETS ? range.begin() : range.end())
+                current(range.has_value() ? std::optional<iterator_type>(range->begin()) : std::optional<iterator_type>(iterator_type{nullptr, nullptr}))
         {
         }
 
         // Define the dereference operator.
-        reference operator*() const { return *current;}
+        reference operator*() const { return **current;}
 
         // Define the pointer access operator.
-        pointer operator->() const { return &(*current);}
+        pointer operator->() const { return &(**current);}
 
         // Define the pre-increment operator.
         IteratorTemplate<IsConst>& operator++() {
             // First move the iterator forward.
-            ++current;
+            ++*current;
 
-            while(current == range.end()) {
+            while(*current == range->end()) {
                 currentIndex++;
                 // If the current index is out of bounds
                 // break out of the loop and return the
                 // current value of the iterator (which should be end()).
-                if (currentIndex >= map->buckets.size()) break;
+                if (currentIndex >= map->NUM_BUCKETS) break;
 
                 // Move to the next bucket
                 if constexpr (IsConst) {
@@ -71,7 +68,7 @@ public:
                 }
 
                 // Set current
-                current = range.begin();
+                *current = range->begin();
             }
 
             return *this;
@@ -92,8 +89,8 @@ public:
         // Define the pre-decrement operator.
         IteratorTemplate<IsConst>& operator--() {
             // Move the iterator back.
-            if (current != range.begin()) {
-                --current;
+            if (*current != range->begin()) {
+                --*current;
             } else {
                 --currentIndex;
                 while (currentIndex >= 0 && map->buckets[currentIndex].IsEmpty()) {
@@ -109,8 +106,8 @@ public:
                     }
 
                     // Set current
-                    current = range.end();
-                    --current;
+                    *current = range->end();
+                    --*current;
                 }
             }
 
@@ -131,7 +128,10 @@ public:
 
         // Define the equals operator.
         bool operator==(const IteratorTemplate<IsConst>& other) const { 
-            return currentIndex == other.currentIndex && current == other.current;
+            if (currentIndex != other.currentIndex) return false;
+            if (!current.has_value() && !other.current.has_value()) return true;
+            if (!current.has_value() || !other.current.has_value()) return false;
+            return *current == *other.current;
         }
 
         // Define the not equals operator.
@@ -148,10 +148,10 @@ public:
         int currentIndex;
 
         // Range Type which holds the lock.
-        range_type range;
+        std::optional<range_type> range;
 
         // Current Iterator
-        iterator_type current;
+        std::optional<iterator_type> current;
 
     };
 
