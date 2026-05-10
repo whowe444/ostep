@@ -36,9 +36,6 @@ public:
     // Move Constructor
     UniquePtr(UniquePtr&& other) noexcept
     {
-        // Delete this' raw_ptr
-        delete this->raw_ptr;
-
         // Reassign 
         this->raw_ptr = other.raw_ptr;
 
@@ -53,6 +50,10 @@ public:
 
     bool operator!=(const UniquePtr<T>& other) const {
         return !(*this == other);
+    }
+
+    explicit operator bool() const {
+        return this->raw_ptr;
     }
 
     // Dereference Operator
