@@ -35,19 +35,29 @@ public:
 
     // Move Constructor
     UniquePtr(UniquePtr&& other) noexcept
-        :
-            raw_ptr(other.raw_ptr)
     {
+        // Delete this' raw_ptr
+        delete this->raw_ptr;
+
+        // Reassign 
+        this->raw_ptr = other.raw_ptr;
+
+        // Prevent double-delete
         other.raw_ptr = nullptr;
     }
 
     // Equals Operator
-    bool operator==(const UniquePtr<T>& other) {
+    bool operator==(const UniquePtr<T>& other) const {
         return other.raw_ptr == this->raw_ptr;
     }
 
-    bool operator!=(const UniquePtr<T>& other) {
-        return *this == other;
+    bool operator!=(const UniquePtr<T>& other) const {
+        return !(*this == other);
+    }
+
+    // Dereference Operator
+    T operator*() {
+        return *this->raw_ptr;
     }
 
     // Delete the Copy Ctor
@@ -56,5 +66,6 @@ public:
     // Delete the Copy Assignment
     UniquePtr& operator=(const UniquePtr& other) = delete;
 
+private:
     T* raw_ptr;
 };
