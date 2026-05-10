@@ -52,7 +52,6 @@ public:
                 lock = std::move(next_lock);
             } else {
                 lock = lock_type(); // Release current lock if we're moving to end()
-                current = nullptr;
             }
             current = ptr;
             return *this;
